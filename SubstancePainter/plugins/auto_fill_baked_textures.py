@@ -1,4 +1,4 @@
-from PySide2.QtWidgets import QWidget, QFrame, QLabel, QLineEdit, QPushButton, QComboBox, QHBoxLayout, QVBoxLayout, QSizePolicy
+from PySide2.QtWidgets import QWidget, QFrame, QLabel, QLineEdit, QPushButton, QComboBox, QFileDialog, QHBoxLayout, QVBoxLayout, QSizePolicy
 # from PySide2.QtGui import QPalette, QColor
 from PySide2.QtCore import Qt
 
@@ -61,6 +61,36 @@ class NameEditorWidget(QWidget):
 
     def setReadOnly(self, b: bool):
         self.__name_value.setReadOnly(b)
+
+
+class FilePickerEditorWidget(QWidget):
+    def __init__(self, parent=None, label_name: str = None):
+        super(FilePickerEditorWidget, self).__init__(parent)
+        self.file_display = NameEditorWidget(self, label_name)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        self.file_display.setSizePolicy(sizePolicy)
+        self.file_picker_btn = QPushButton(self)
+        self.file_picker_btn.setText("...")
+        self.file_picker_btn.setFixedWidth(15)
+
+        self.hbox = QHBoxLayout(self)
+        self.hbox.addWidget(self.file_display)
+        self.hbox.addWidget(self.file_picker_btn)
+
+    def pickFilePath(self):
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.FileMode.Directory)
+        dialog.setNameFilters(["All(*)"])
+        dialog.setDirectory(os.path.abspath("../"))
+        if dialog.exec():
+            file_path = dialog.selectedFiles()[0]
+            try:
+                file_path = os.path.relpath(file_path)
+            except ValueError:
+                pass
+            self.file_display.value_string = file_path
 
 
 class Combobox(QComboBox):
@@ -236,7 +266,11 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setWindowTitle("Fill Texture Set")
-        self.prefix_editor = NameEditorWidget(self, "Prefix Name")
+
+        # self.file_picker = FilePickerEditorWidget(self, "File")
+        # self.file_sep = Separator(self)
+
+        self.prefix_editor = NameEditorWidget(self, "Prefix")
         self.separator = Separator(self)
 
         self.suffix_widget = SuffixWidget(self)
@@ -260,6 +294,8 @@ class MainWindow(QWidget):
         # self.reload_json_btn.setText("Reload Json File")
 
         self.vbox = QVBoxLayout(self)
+        # self.vbox.addWidget(self.file_picker)
+        # self.vbox.addWidget(self.file_sep)
         self.vbox.addWidget(self.prefix_editor)
         self.vbox.addWidget(self.separator)
         self.vbox.addWidget(self.preset_widget)

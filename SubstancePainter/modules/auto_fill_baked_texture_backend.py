@@ -102,7 +102,9 @@ def getMeshMapUsage(usage: str):
 
 
 def getProjectResourceIDByName(name: str):
-    return sp_resource.ResourceID.from_url(r"resource://project0/" + name)
+    res_id = sp_resource.ResourceID.from_project(name)
+    latest_res = sp_resource.Resource.retrieve(res_id)[0].identifier()
+    return latest_res
 
 
 def applyTextureToTextureSet(texture_set: sp_ts.TextureSet, usage: sp_ts.MeshMapUsage, mesh_map: sp_resource.ResourceID):
@@ -118,5 +120,6 @@ def applyAllTextureToTextureSet(texture_set: sp_ts.TextureSet, d: dict):
 
 
 if __name__ == '__main__':
-    print(json_path)
-    loadJsonData()
+    search_result = sp_resource.search("bake_box_normal")
+    for res in search_result:
+        print(res.identifier())
