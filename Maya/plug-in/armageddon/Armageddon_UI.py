@@ -53,9 +53,16 @@ class RadioGroup(QWidget):
 class ChangeLocationUI(QWidget):
     def __init__(self, *args, **kwargs):
         super(ChangeLocationUI, self).__init__(*args, **kwargs)
+
+        try:
+            cmd.deleteUI("change_location")
+        except Exception as e:
+            print(e)
+             
+        self.setObjectName("change_location")        
         self.setParent(mayaMainWindow)
         self.setWindowFlags(Qt.Window)
-        self.setObjectName('change_location')
+
         self.setWindowTitle('劲爆大象部落 0.0.1')
         self.setGeometry(50, 50, 250, 150)
         self.vbox = QVBoxLayout(self)
@@ -88,21 +95,28 @@ class ChangeLocationUI(QWidget):
         x_radio_group = RadioGroup("X-aixs:", self)
         y_radio_group = RadioGroup("Y-aixs:", self)
         z_radio_group = RadioGroup("Z-aixs:", self)
+        
         x_radio_group.addRadioBtn("Min")
         x_radio_group.addRadioBtn("Mid")
         x_radio_group.addRadioBtn("Max")
+        x_radio_group.addRadioBtn("Ignore")
         x_radio_group.layoutWidget()
         self.vbox.addWidget(x_radio_group)
+        
         y_radio_group.addRadioBtn("Min")
         y_radio_group.addRadioBtn("Mid")
         y_radio_group.addRadioBtn("Max")
+        y_radio_group.addRadioBtn("Ignore")        
         y_radio_group.layoutWidget()
         self.vbox.addWidget(y_radio_group)
+        
         z_radio_group.addRadioBtn("Min")
         z_radio_group.addRadioBtn("Mid")
         z_radio_group.addRadioBtn("Max")
+        z_radio_group.addRadioBtn("Ignore")         
         z_radio_group.layoutWidget()
         self.vbox.addWidget(z_radio_group)
+        
         self.axis_radio_group = [x_radio_group, y_radio_group, z_radio_group]
         
     def getAxisState(self):
@@ -129,7 +143,7 @@ class ChangeLocationUI(QWidget):
             cmd.move(0, 0, 0, sel, rpr=True)
             
     def setGroupToWorldCenter(self):
-        groupMoveToWorldCenter(self.getAxisState(), checkSelect(l=True, transform=True))
+        groupMoveToWorldCenter(self.getAxisState(), checkSelect(l=True, transforms=True))
 
 
 def checkSelect(*args, **kwargs):
@@ -198,6 +212,7 @@ def setPivotPosition(obj, pos):
 
 
 def main():
+    print("\n====Start UI1=====\n")
     ui = ChangeLocationUI()
     ui.show()
     return ui
