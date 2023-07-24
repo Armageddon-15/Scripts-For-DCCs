@@ -5,7 +5,7 @@ from PySide2.QtWidgets import *
 
 class RadioGroup(QWidget):
     def __init__(self, text="", *args, **kwargs):
-        super(RadioGroup, self).__init__(**kwargs)
+        super(RadioGroup, self).__init__( *args, **kwargs)
         self.text_label = QLabel(self)
         self.radio_group = []
         self.hbox = QHBoxLayout(self)

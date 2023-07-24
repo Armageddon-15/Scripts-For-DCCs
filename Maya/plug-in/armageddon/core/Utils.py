@@ -1,4 +1,8 @@
 
+def average2(a, b):
+    return (a+b)/2
+
+
 def uniqueList(l):
     search_set = set()
     new_list = []

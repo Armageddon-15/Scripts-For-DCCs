@@ -2,6 +2,7 @@ import Utils
 
 import pymel.core as core
 import pymel.core.datatypes as pmdt
+import pymel.core.nodetypes as pmnt
 
 
 def checkedSelect(*args, **kwargs):
@@ -29,3 +30,23 @@ def shapeSelect(com):
         nt.Shape: shapes in transform
     """
     return core.ls(com, objectsOnly=True)
+
+
+def keepTopMostSelectedTransform(selection):
+    selected_top_parent_set = set()
+
+    for obj in selection:
+        if type(obj) is pmnt.Transform:
+            parents = obj.getAllParents()
+            if len(parents) > 0:
+                all_not_in_sel = True
+                for p in reversed(parents):
+                    if p in selection:
+                        all_not_in_sel = False
+                        selected_top_parent_set.add(p)
+                        break
+                if all_not_in_sel:
+                    selected_top_parent_set.add(obj)
+            else:
+                selected_top_parent_set.add(obj)
+    return list(selected_top_parent_set)
