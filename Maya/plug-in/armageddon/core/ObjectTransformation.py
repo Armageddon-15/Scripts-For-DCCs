@@ -14,6 +14,18 @@ def getTransformShapes(transform):
     return core.listRelatives(transform, shapes=True)
 
 
+def getTransformChildren(transform, transform_only=True):
+    children = core.listRelatives(transform, children=True)
+    if not transform_only:
+        return children        
+
+    final_list = []
+    for child in children:
+        if type(child) is pmnt.Transform:
+            final_list.append(child)
+    return final_list
+        
+
 def getComponetsTransforms(cs):
     c = Utils.uniqueList(SelectionUtil.shapeSelect(cs))
     return getShapeTransforms(c)
@@ -23,31 +35,30 @@ def getTransformPosition(transform, world_space=True):
     return transform.getPivot(worldSpace=world_space)
 
 
-
-def keepTopMostSelectedTransform(selection):
-    selected_top_parent_set = set()
-
-    for obj in selection:
-        if type(obj) is pmnt.Transform:
-            parents = obj.getAllParents()
-            if len(parents) > 0:
-                all_not_in_sel = True
-                for p in reversed(parents):
-                    if p in selection:
-                        all_not_in_sel = False
-                        selected_top_parent_set.add(p)
-                        break
-                if all_not_in_sel:
-                    selected_top_parent_set.add(obj)
-            else:
-                selected_top_parent_set.add(obj)
-    return list(selected_top_parent_set)
-
-
-def getSingleTransformBoundingBox(transform, space="world"):
+def getSingleTransformBoundingBox(transform=pmnt.Transform(), actual_size=True, 
+                                  exclude_children=False, space="world"):
     if type(transform) is pmnt.Transform:
-        return transform.getBoundingBox(space=space)
-    
+        if not exclude_children:
+            if not actual_size:
+                return transform.getBoundingBox(space=space)
+            
+        acopy = core.duplicate(transform)[0]
+        core.parent(acopy, world=True)            
+        
+        if exclude_children:
+            children = getTransformChildren(acopy)
+            if len(children) > 0:
+                for child in children:
+                    # since "parent|child" name is not support in pymel,
+                    # use string instead
+                    child_name = child.__melobject__()
+                    core.delete(child_name)
+        if actual_size:
+            core.makeIdentity(acopy, apply=True)
+        bbox = acopy.getBoundingBox(space=space)
+        core.delete(acopy)
+        return bbox
+        
     return pmdt.BoundingBox()
 
 
@@ -69,20 +80,43 @@ def largestBoundingBoxOfBoundingBoxes(bboxes):
         
     return pmdt.BoundingBox(box_min, box_max)        
     
-      
     
-def getAllTransformsBoundingBox(transforms, space="world"):
+def getAllTransformsBoundingBox(transforms, actual_size=True, exclude_children=False, space="world"):
     bboxes = []
     
-    for trans in transforms:
-        bboxes.append(getSingleTransformBoundingBox(trans, space))
+    if type(transforms) is list:
+        for trans in transforms:
+            bboxes.append(getSingleTransformBoundingBox(trans, actual_size, exclude_children, space))
+    elif type(transforms) is pmnt.Transform:
+        bboxes.append(getSingleTransformBoundingBox(transforms, actual_size, exclude_children, space))
         
     return largestBoundingBoxOfBoundingBoxes(bboxes)
 
 
+def getShapeBoundingBox(shape):
+    shape_bbox_min = shape.boundingBoxMin.get()
+    shape_bbox_max = shape.boundingBoxMax.get()
+    
+    return pmdt.BoundingBox(shape_bbox_min, shape_bbox_max)
+
+
+def getTransformShapesBoundingBox(transform):
+    if type(transform) is pmnt.Transform:
+        shapes = getTransformShapes(transform)
+        bboxes = []
+        for shape in shapes:
+            bboxes.append(getShapeBoundingBox(shape))
+        
+        return largestBoundingBoxOfBoundingBoxes(bboxes)
+    return pmdt.BoundingBox()
+            
+
 def visualizeBoundingBox(bbox, name="BoundingBoxVis"):
     with core.UndoChunk("create visual bounding box"):
-        vis_cube = core.polyCube(d=bbox.depth(), w=bbox.width(), h=bbox.height(), name=name)
+        vis_cube = core.polyCube(d=max(0.01, bbox.depth()), 
+                                 w=max(0.01, bbox.width()), 
+                                 h=max(0.01, bbox.height()),
+                                 sx=2, sy=2, sz=2, name=name)
         vis_cube_trans = vis_cube[0]
         vis_cube_trans.setTranslation(bbox.center())
     return vis_cube
