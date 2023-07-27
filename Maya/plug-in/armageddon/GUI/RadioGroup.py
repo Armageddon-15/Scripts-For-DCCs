@@ -1,14 +1,13 @@
-from PySide2.QtCore import * 
-from PySide2.QtGui import * 
-from PySide2.QtWidgets import *
+from PySide2.QtWidgets import QWidget, QLabel, QHBoxLayout, QRadioButton
 
 
 class RadioGroup(QWidget):
-    def __init__(self, text="", *args, **kwargs):
-        super(RadioGroup, self).__init__( *args, **kwargs)
+    def __init__(self, parent, text="", *args, **kwargs):
+        super(RadioGroup, self).__init__(parent, *args, **kwargs)
         self.text_label = QLabel(self)
         self.radio_group = []
         self.hbox = QHBoxLayout(self)
+        self.hbox.setContentsMargins(0, 1, 0, 1)
         
         self.setTitleText(text)
         

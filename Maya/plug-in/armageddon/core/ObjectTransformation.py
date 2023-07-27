@@ -24,6 +24,21 @@ def getTransformChildren(transform, transform_only=True):
         if type(child) is pmnt.Transform:
             final_list.append(child)
     return final_list
+
+
+def getTransformAllChildren(transform, transform_only=True, with_self=False):
+    children = getTransformChildren(transform, transform_only)
+    child_list = []    
+    if with_self:
+        child_list = [transform]
+        
+    if len(children) > 0:
+        for child in children:
+            ch = getTransformAllChildren(child, transform_only)
+            child_list.append(child)
+            child_list.extend(ch)
+                
+    return child_list
         
 
 def getComponetsTransforms(cs):
@@ -31,8 +46,28 @@ def getComponetsTransforms(cs):
     return getShapeTransforms(c)
 
 
-def getTransformPosition(transform, world_space=True):
-    return transform.getPivot(worldSpace=world_space)
+def getTransformPosition(transform, space="world"):
+    return transform.getTranslation(space=space)
+
+
+def setTransformPosition(transform, position, space="world"):
+    return transform.setTranslation(position, space=space)
+
+
+def getTransformPivot(transform, world_space=True):
+    return transform.getPivots(worldSpace=world_space)[0]
+
+
+def setPivotPosition(obj, posiiton, if_world_space=True):
+    if type(obj) is pmnt.Transform:    
+        core.xform(obj, pivots=posiiton, worldSpace=if_world_space)
+        
+
+def getPivotPosition(obj, if_world_space=True):
+    if type(obj) is pmnt.Transform:    
+        p = core.xform(obj, q=True, pivots=True, worldSpace=if_world_space)
+        return pmdt.Point(p[:3])
+    return pmdt.Point()
 
 
 def getSingleTransformBoundingBox(transform=pmnt.Transform(), actual_size=True, 
@@ -88,7 +123,7 @@ def getAllTransformsBoundingBox(transforms, actual_size=True, exclude_children=F
         for trans in transforms:
             bboxes.append(getSingleTransformBoundingBox(trans, actual_size, exclude_children, space))
     elif type(transforms) is pmnt.Transform:
-        bboxes.append(getSingleTransformBoundingBox(transforms, actual_size, exclude_children, space))
+        return getSingleTransformBoundingBox(transforms, actual_size, exclude_children, space)
         
     return largestBoundingBoxOfBoundingBoxes(bboxes)
 
@@ -160,3 +195,5 @@ def bboxCertainPostionByState(bbox, states, current_pivot_position=pmdt.Point())
         i += 1
         
     return pmdt.Point(new_pivot_pos)
+
+

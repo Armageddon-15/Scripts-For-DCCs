@@ -50,3 +50,10 @@ def keepTopMostSelectedTransform(selection):
             else:
                 selected_top_parent_set.add(obj)
     return list(selected_top_parent_set)
+
+
+def select(sel):
+    name_list = []
+    for obj in sel:
+        name_list.append(obj.__melobject__())
+    core.select(name_list)
