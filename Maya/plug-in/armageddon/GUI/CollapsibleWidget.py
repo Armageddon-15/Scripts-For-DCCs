@@ -3,7 +3,7 @@ from PySide2.QtCore import Qt, QParallelAnimationGroup, QPropertyAnimation, QAbs
 
 
 class CollapsibleHeader(QWidget):
-    def __init__(self, parent=None, header_title="", header_font_size=15, *args, **kwargs):
+    def __init__(self, parent=None, header_title="", block_widget=None, header_font_size=15, *args, **kwargs):
         super(CollapsibleHeader, self).__init__(parent, *args, **kwargs)
         
         self.content_height_hint = 0
@@ -20,7 +20,7 @@ class CollapsibleHeader(QWidget):
         self.header.setSizePolicy(sizePolicy)
         # self.header.
         self.header.setCheckable(True)
-        # self.header.setChecked(False)
+        self.header.setChecked(True)
         self.header.setStyleSheet("QToolButton{border: 0.5px solid gray; border-radius: 3px}")
         self.header.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.header.setArrowType(Qt.RightArrow)
@@ -29,6 +29,8 @@ class CollapsibleHeader(QWidget):
         self.block_widget = QWidget(self)
         self.block_vbox = QVBoxLayout(self.block_widget)
         self.block_vbox.setContentsMargins(10,0,0,0)
+        if block_widget is not None:
+            self.addWidget(block_widget)
         
         self.vbox = QVBoxLayout(self)
         self.vbox.setSpacing(1)
@@ -36,15 +38,17 @@ class CollapsibleHeader(QWidget):
         self.vbox.addWidget(self.header)
         self.vbox.addWidget(self.block_widget)
         
+        self.clickCollapse()
+        
     
     def clickCollapse(self):
         checked = self.header.isChecked()
         if checked:
             self.header.setArrowType(Qt.DownArrow)
-            self.block_widget.setMaximumHeight(0)
+            self.block_widget.setMaximumHeight(self.content_height_hint)
         else:
             self.header.setArrowType(Qt.RightArrow)
-            self.block_widget.setMaximumHeight(self.content_height_hint)
+            self.block_widget.setMaximumHeight(0)
         
         
     def addWidget(self, widget):

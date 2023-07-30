@@ -1,19 +1,18 @@
 # -*- coding: UTF-8 -*-
-
+import Parameters
 import LocationByBoundingBoxFunction as Func
 
 from GUI import Separator, RadioGroup, WidgetWithHeader
 import GUI.Utils as GuiUtils
 
-from GUI.SetMayaMainWindow import setWidgetAsMayaMainWindow
+from GUI.MayaMainWindow import setWidgetAsMayaMainWindow
 
 from PySide2.QtCore import * 
 from PySide2.QtGui import * 
 from PySide2.QtWidgets import *
 
-
-WIDGET_OBJECT_NAME = u"location_by_bbox"
-WIDGET_TITLE_NAME = u"劲爆大象部落 0.0.1"
+WIDGET_TITLE_NAME = "Transformation And Bounding Box"
+WIDGET_OBJECT_NAME = "transformation_and_bounding_box"
 
 
 class BoundingBoxStateWidget(QWidget):
@@ -93,7 +92,9 @@ class BoundingBoxStateWidget(QWidget):
         print (self.getAllSettings())
     
     def visualizeBBox(self):
-        Func.visualizeSelectedBoundingBox(self.getIfOneLargeBBox(), self.getIfActualSize(), self.getIfExcludeChildren())
+        Func.visualizeSelectedBoundingBox(self.getIfOneLargeBBox(), 
+                                          self.getIfActualSize(), 
+                                          self.getIfExcludeChildren())
        
     def getState(self):
         result = []
@@ -116,7 +117,8 @@ class BoundingBoxStateWidget(QWidget):
         return self.one_large_bbox.isChecked()
     
     def getAllSettings(self):
-        return self.getState(), self.getIfActualSize(), self.getIfExcludeChildren(), self.getIfOneLargeBBox()
+        return (self.getState(), self.getIfActualSize(), 
+                self.getIfExcludeChildren(), self.getIfOneLargeBBox())
             
         
 
@@ -132,7 +134,7 @@ class LocationByBoundingBox(QWidget):
         self.vbox = QVBoxLayout(self)
         # self.vbox.setContentsMargins(5, 0, 5, 0)
         self.vbox.setSpacing(1)
-        self.vbox.setAlignment(Qt.AlignTop)        
+        self.vbox.setAlignment(Qt.AlignTop)
         
         self.bbox_settings_widget = WidgetWithHeader.WidgetWithHeader(self, "Bounding Box Settings:")
         self.bbox_settings = BoundingBoxStateWidget(self)
@@ -179,7 +181,7 @@ class LocationByBoundingBox(QWidget):
         self.move_settings_widget.addWidget(self.set_pivot_by_bbox)
         self.move_settings_widget.addWidget(self.keep_pivot_offset)        
         self.move_settings_widget.addWidget(self.move_to_pivot_by_bbox)
-        self.move_settings_widget.addWidget(self.move_to_world_center_by_pivot)        
+        self.move_settings_widget.addWidget(self.move_to_world_center_by_pivot)    
         
         self.vbox.addWidget(self.bbox_settings_widget)
         self.vbox.addWidget(self.separator)
@@ -211,10 +213,11 @@ class LocationByBoundingBox(QWidget):
         Func.moveToWorldCenterByPivot(self.getIfMoveExcludeChildren(), self.getIfKeepPivotOffset())           
         
 
+        
 
 
 def show():
-    print("\n====Start UI1=====\n")
+    print("\n==== Start", WIDGET_TITLE_NAME, "=====\n")
     ui = LocationByBoundingBox()
     ui.show()
     return ui

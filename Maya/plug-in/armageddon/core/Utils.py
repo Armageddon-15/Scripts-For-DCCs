@@ -14,3 +14,6 @@ def uniqueList(l):
     return new_list
 
 
+def appendListIfUnique(l, item):
+    if not item in l:
+        l.append(item)

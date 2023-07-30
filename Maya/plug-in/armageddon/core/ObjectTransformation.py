@@ -1,5 +1,4 @@
 import Utils
-import SelectionUtil
 
 import pymel.core as core
 import pymel.core.nodetypes as pmnt
@@ -41,8 +40,8 @@ def getTransformAllChildren(transform, transform_only=True, with_self=False):
     return child_list
         
 
-def getComponetsTransforms(cs):
-    c = Utils.uniqueList(SelectionUtil.shapeSelect(cs))
+def getComponetsTransforms(shape):
+    c = Utils.uniqueList(shape)
     return getShapeTransforms(c)
 
 
@@ -148,9 +147,9 @@ def getTransformShapesBoundingBox(transform):
 
 def visualizeBoundingBox(bbox, name="BoundingBoxVis"):
     with core.UndoChunk("create visual bounding box"):
-        vis_cube = core.polyCube(d=max(0.01, bbox.depth()), 
-                                 w=max(0.01, bbox.width()), 
-                                 h=max(0.01, bbox.height()),
+        vis_cube = core.polyCube(d=max(0.0001, bbox.depth()), 
+                                 w=max(0.0001, bbox.width()), 
+                                 h=max(0.0001, bbox.height()),
                                  sx=2, sy=2, sz=2, name=name)
         vis_cube_trans = vis_cube[0]
         vis_cube_trans.setTranslation(bbox.center())
