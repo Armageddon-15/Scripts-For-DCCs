@@ -1,6 +1,0 @@
-/*
-copy this line to maya mel pannel:
-commandPort -name "localhost:7001" -sourceType "mel" -echoOutput;
-
- */
-print("hi");
