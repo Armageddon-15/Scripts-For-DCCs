@@ -75,9 +75,6 @@ class CollapsibleHeader(QWidget):
         self.vbox.setContentsMargins(*args, **kwargs)    
         
     
-
-
-
 class CollapsibleBox(QWidget):
     def __init__(self, parent=None, title="", *args, **kwargs):
         super(CollapsibleBox, self).__init__(parent, *args, **kwargs)
