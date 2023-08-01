@@ -20,6 +20,15 @@ def orderedSeclect(*args, **kwargs):
     return checkedSelect(orderedSelection=True, *args, **kwargs)
 
 
+def getCertainTypeFromSelection(sel, the_type):
+    final_list = []
+    for obj in sel:
+        if type(obj) is the_type:
+            for component in obj:
+                final_list.append(component)
+    return final_list
+
+
 def shapeSelect(com):
     """this one is not for viewport selection
 

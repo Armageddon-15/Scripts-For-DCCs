@@ -4,6 +4,7 @@ from GUI import Separator, WidgetWithHeader, WidgetWithName
 import GUI.Utils as GuiUtils
 
 import ModelingFunction
+import BetterNormalFunction
 
 from GUI.MayaMainWindow import setWidgetAsMayaMainWindow
 
@@ -71,13 +72,107 @@ class AlignmentWidget(QWidget):
     def pointAlingFace(self):
         ModelingFunction.verticesAlignFace(self.face_align_combo_box.getCurrentActiveData(), 
                                            self.max_length.getValue())
+     
+     
+        
+class BetterNormal(QWidget):
+    def __init__(self, parent=None, *args, **kwargs):
+        super(BetterNormal,self).__init__(parent, *args, **kwargs)
+        
+        if parent is None:
+            setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
+            
+        
+        self.header = WidgetWithHeader.WidgetWithHeader(self, "Better Normal")
+        
+        self.area_weight = WidgetWithName.ViewerSlider(self, "Area Weight")
+        self.area_weight.setValue(1)
+        self.area_weight.setMaximumValue(20)
+        self.area_weight.valueChanged.connect(self.liveUpdateBetterNormal)
+        self.distance_weight = WidgetWithName.ViewerSlider(self, "Distance Weight")
+        self.distance_weight.setValue(1)
+        self.distance_weight.setMaximumValue(20)
+        self.distance_weight.valueChanged.connect(self.liveUpdateBetterNormal)
+        self.size_scale = WidgetWithName.ViewerSlider(self, "Size Scale")
+        self.size_scale.setValue(1)
+        self.size_scale.setPrecise(0.1)        
+        self.size_scale.setMaximumValue(100)
+        self.size_scale.valueChanged.connect(self.liveUpdateBetterNormal)
+        self.threshold = WidgetWithName.ViewerSlider(self, "Threshold")
+        self.threshold.setPrecise(0.01)
+        self.threshold.setMaximumValue(1)
+        self.threshold.setMinimumValue(0)
+        self.threshold.valueChanged.connect(self.liveUpdateBetterNormal)
+        self.live_update_checkbox = GuiUtils.addWidget(self, QCheckBox, "Live Update", "")
+        self.live_update_checkbox.toggled.connect(self.liveUpdateToggle)
+        
+        self.apply_btn = GuiUtils.addButton(self, "Apply")
+        self.apply_btn.clicked.connect(self.betterNormalExcute)
+        
+        self.header.addWidget(self.area_weight)
+        self.header.addWidget(self.distance_weight)
+        self.header.addWidget(self.size_scale)
+        self.header.addWidget(self.threshold)
+        
+        self.header.addWidget(self.live_update_checkbox)
+        self.header.addWidget(self.apply_btn)
+        
+        self.vbox = QVBoxLayout(self)
+        self.vbox.setAlignment(Qt.AlignTop)
+        self.vbox.setSpacing(2)
+
+        self.vbox.addWidget(self.header)
+        
+    def liveUpdateToggle(self, b):
+        if b:
+            BetterNormalFunction.updateBackendSelection()
+    
+    def liveUpdateBetterNormal(self):
+        if self.live_update_checkbox.isChecked():
+            area, dist = self.area_weight.getSliderValue(), self.distance_weight.getSliderValue()
+            size, thres = self.size_scale.getSliderValue(), self.threshold.getSliderValue()            
+            
+            BetterNormalFunction.betterNormalLiveUpdate(thres, area, dist, size)
+        
+    def betterNormalExcute(self):
+        area, dist = self.area_weight.getSliderValue(), self.distance_weight.getSliderValue()
+        size, thres = self.size_scale.getSliderValue(), self.threshold.getSliderValue()
+        BetterNormalFunction.betterNormalExecuteOnce(thres, area, dist, size)  
+        
+        self.live_update_checkbox.setChecked(False)
+              
+        # print(area, dist)
+        # print(size, thres)
+        # print(self.live_update_checkbox.isChecked())
+        
+    def destroy(self, *args, **kwargs):
+        super(BetterNormal, self).destroy(*args, **kwargs)
+        BetterNormalFunction.releaseBackendSelection()
+
         
         
+class Modeling(QWidget):
+    def __init__(self, parent=None, *args, **kwargs):
+        super(Modeling, self).__init__(parent, *args, **kwargs)
+                
+        if parent is None:
+            setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
+            
+        self.alignment_widget = AlignmentWidget(self)
+        self.better_normal_widget = BetterNormal(self)
+        
+        self.vbox = QVBoxLayout(self)
+        self.vbox.setAlignment(Qt.AlignTop)
+        self.vbox.setSpacing(2)
+        self.vbox.setContentsMargins(0,0,0,0)
+        
+        self.vbox.addWidget(self.alignment_widget)
+        self.vbox.addWidget(self.better_normal_widget)
 
 
 
 def show():
     print("\n==== Start", WIDGET_TITLE_NAME, "=====\n")
-    ui = AlignmentWidget()
+    ui = Modeling()
     ui.show()
     return ui

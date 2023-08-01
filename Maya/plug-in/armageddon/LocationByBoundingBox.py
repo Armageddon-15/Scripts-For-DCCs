@@ -144,9 +144,9 @@ class LocationByBoundingBox(QWidget):
         
         self.move_settings_widget = WidgetWithHeader.WidgetWithHeader(self, "Moving:")
         
-        self.move_exclude_children = GuiUtils.addWidget(self, "Exclude Children", 
-                                                        "勾选时移动将不包括子集",
-                                                        QCheckBox)
+        self.move_exclude_children = GuiUtils.addWidget(self, QCheckBox,
+                                                        "Exclude Children", 
+                                                        "勾选时移动将不包括子集")
                        
         self.move_to_world_center_by_group_bbox = GuiUtils.addButton(self, "Move To World Center By BBox",
                                                                  "根据bbox选项移动到对应位置\n"
@@ -160,11 +160,11 @@ class LocationByBoundingBox(QWidget):
                                                     "根据bbox选项移动枢轴")
         self.set_pivot_by_bbox.clicked.connect(self.setPivotByBBox)
         
-        self.keep_pivot_offset = GuiUtils.addWidget(self, "Keep Pivot Offset",
+        self.keep_pivot_offset = GuiUtils.addWidget(self, QCheckBox,
+                                                    "Keep Pivot Offset",
                                                     "移动后保持枢轴对物体的相对位置，\n"
                                                     "仅对此选项之后的操作有用,\n"
-                                                    "一般第一个不勾选，第二个勾选",
-                                                    QCheckBox)
+                                                    "一般第一个不勾选，第二个勾选")
         
         self.move_to_pivot_by_bbox = GuiUtils.addButton(self, "Move To Pivot By BBox",
                                                         "根据bbox选项移动物体到枢轴所在位置，\n"

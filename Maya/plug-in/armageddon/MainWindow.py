@@ -21,7 +21,7 @@ class MainWindow(QWidget):
         self.location_collapsible_header = CollapsibleWidget.CollapsibleHeader(self, LocationByBoundingBox.WIDGET_TITLE_NAME,
                                                                                self.location_widget)
         
-        self.modeling_widget = Modeling.AlignmentWidget(self)
+        self.modeling_widget = Modeling.Modeling(self)
         self.modeling_collapsible_header = CollapsibleWidget.CollapsibleHeader(self, Modeling.WIDGET_TITLE_NAME,
                                                                                self.modeling_widget)
         
