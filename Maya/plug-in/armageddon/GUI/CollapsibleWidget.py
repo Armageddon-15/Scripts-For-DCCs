@@ -5,7 +5,7 @@ from PySide2.QtCore import Qt, QParallelAnimationGroup, QPropertyAnimation, QAbs
 class CollapsibleHeader(QWidget):
     def __init__(self, parent=None, header_title="", block_widget=None, header_font_size=15, *args, **kwargs):
         super(CollapsibleHeader, self).__init__(parent, *args, **kwargs)
-        
+
         self.content_height_hint = 0
                 
         self.header = QToolButton(self)
@@ -39,6 +39,10 @@ class CollapsibleHeader(QWidget):
         self.vbox.addWidget(self.block_widget)
         
         self.clickCollapse()
+        
+    
+    def getHeaderName(self):
+        return self.header.text()
         
     
     def clickCollapse(self):
