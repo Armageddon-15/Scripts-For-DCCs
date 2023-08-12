@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+
 from maya import OpenMayaUI as omui 
 
 from shiboken2 import wrapInstance 
@@ -19,11 +21,12 @@ def deleteUiObject(object_name):
         try:
             core.deleteUI(object_name)
         except Exception as e:
-            print(e)
+            # print(e)
+            pass
         try:
             core.deleteUI(object_name+"WorkspaceControl")
         except Exception as e:
-            print(e)
+            pass
     
     
 
@@ -35,7 +38,7 @@ def setWidgetAsMayaMainWindow(widget, title_name="DefaultTitle", object_name=Non
         try:
             widget.setObjectName(object_name)
         except BaseException as e:
-            print(e)
+            pass
             
     MAYA_MAIN_WINDOW = getMayaMainWindow
     widget.setParent(MAYA_MAIN_WINDOW)
@@ -52,7 +55,7 @@ def setWidgetName(widget, title_name="DefaultTitle", object_name=None):
         try:
             widget.setObjectName(object_name)
         except BaseException as e:
-            print(e)
+            pass
             
     widget.setWindowTitle(title_name)
 

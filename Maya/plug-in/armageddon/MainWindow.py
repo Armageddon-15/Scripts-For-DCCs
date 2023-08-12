@@ -1,8 +1,9 @@
+# -*- coding: UTF-8 -*-
+
 import Parameters
 
 import LocationByBoundingBox, Modeling
 from GUI import CollapsibleWidget
-import GUI.Utils as GuiUtils
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 from GUI.MayaMainWindow import *
@@ -12,8 +13,6 @@ from PySide2.QtWidgets import *
 
 if not "main_ui" in globals():
     main_ui = None
-    
-    
 
 
 class ItemWidget(QWidget):
