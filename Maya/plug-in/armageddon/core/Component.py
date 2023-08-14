@@ -3,6 +3,9 @@ import pymel.core.datatypes as pmdt
 import pymel.core.nodetypes as pmnt
 
 
+AXIS_VECTOR_DICT = {"pivot_x": pmdt.Vector([1,0,0]), "pivot_y": pmdt.Vector([0,1,0]), "pivot_z": pmdt.Vector([0,0,1])}
+
+
 def getSeparateComponentFromSelection(sel, the_type):
     final_list = []
     for obj in sel:
@@ -44,6 +47,12 @@ def getFacePosition(face, space="world"):
         
     return position
 
+
+def getEdgeLoopFromEdge(edge):
+    if type(edge) is core.MeshEdge:
+        edge_loop = core.polySelect(edge, edgeLoopOrBorder=edge.index(), q=True)
+        return edge_loop
+    
 
 def pointsAlignLineSeparate(start_pos, end_pos, points, max_trace_distance=10000, space="world"):
     normalized_dir = pmdt.normal(end_pos - start_pos)
@@ -107,3 +116,5 @@ def pointsAlignFaceSurface(face, points, align_dir=None, max_trace_distance=1000
     face_pos = getFacePosition(face, space=space)
     face_normal = face.getNormal(space=space)
     pointsAlignSurfaceSeparate(face_pos, face_normal, points, align_dir, max_trace_distance, space)
+    
+    
