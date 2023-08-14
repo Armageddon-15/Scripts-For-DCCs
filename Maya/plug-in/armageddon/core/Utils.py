@@ -14,7 +14,7 @@ def average(l):
 
 
 def getMostInList(l, func=max):
-    a = l[0]
+    a = copy.deepcopy(l[0])
     ans = [0]
     for i in range(len(l) - 1):
         ind = i+1
