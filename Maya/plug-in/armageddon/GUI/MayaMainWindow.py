@@ -11,9 +11,9 @@ from PySide2.QtCore import Qt
     
     
 def getMayaMainWindow():
-    MAYA_MAIN_WINDOW_PTR = omui.MQtUtil.mainWindow() 
-    MAYA_MAIN_WINDOW = wrapInstance(long(MAYA_MAIN_WINDOW_PTR), QWidget) 
-    return MAYA_MAIN_WINDOW
+    maya_main_window_ptr = omui.MQtUtil.mainWindow() 
+    maya_main_window = wrapInstance(long(maya_main_window_ptr), QWidget) 
+    return maya_main_window
 
 
 def deleteUiObject(object_name):
@@ -40,8 +40,8 @@ def setWidgetAsMayaMainWindow(widget, title_name="DefaultTitle", object_name=Non
         except BaseException as e:
             pass
             
-    MAYA_MAIN_WINDOW = getMayaMainWindow
-    widget.setParent(MAYA_MAIN_WINDOW)
+    main_window = getMayaMainWindow()
+    widget.setParent(main_window)
     widget.setWindowFlags(Qt.Window)
     
     widget.setWindowTitle(title_name)

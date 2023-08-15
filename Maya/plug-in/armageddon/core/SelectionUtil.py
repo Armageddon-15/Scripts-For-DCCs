@@ -63,6 +63,9 @@ def keepTopMostSelectedTransform(selection):
 
 def select(sel):
     name_list = []
-    for obj in sel:
-        name_list.append(obj.__melobject__())
+    if type(sel) is list:
+        for obj in sel:
+            name_list.append(obj.__melobject__())
+    else:
+        name_list = [sel]
     core.select(name_list)

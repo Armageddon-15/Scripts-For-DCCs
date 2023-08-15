@@ -2,6 +2,8 @@ import core.Utils as Utils
 import core.Component as Component
 import core.SelectionUtil as SelecUtils
 import core.ObjectTransformation as ObjTrans
+import core.PyMelMath as PyMelMath
+import core.MelUtils as MelUtils
 
 import pymel.core as core
 import pymel.core.nodetypes as pmnt
@@ -10,77 +12,45 @@ import pymel.core.datatypes as pmdt
 import random
 
 
-def rotateVector(dir, dest_dir):
-    rotate_axis = pmdt.normal(pmdt.cross(dir, dest_dir))
-    rotate_angle = pmdt.acos(pmdt.dot(dir, dest_dir))
-    
-    return pmdt.Quaternion(rotate_angle, rotate_axis)
+def getRealPivotRotation():
+    vaild_pivot_rot = core.manipPivot(q=True, oriValid=True)
+    if vaild_pivot_rot:
+        current_pivot_rot = core.manipPivot(q=True, o=True)[0]
+        current_pivot_rot = pmdt.EulerRotation(current_pivot_rot, unit="degrees").asQuaternion()
+    else:
+        obj = SelecUtils.orderedSeclect()[0]
+        current_pivot_rot = obj.getRotation(space="world", quaternion=True)
+    return current_pivot_rot
 
 
-def getBordersFromBoarderEdges(border_edges):
-    name = border_edges[0].__str__().split(".")[0]
-    used_edge_indices = []
-    final_edges = []
-    
-    for edge in border_edges:
-        if edge.index() in used_edge_indices:
-            continue
-        
-        edge_loop = Component.getEdgeLoopFromEdge(edge)
-        used_edge_indices.extend(edge_loop)
-        
-        edges = []
-        for ind in edge_loop:
-            edge_name = name + ".e[%d]" % ind
-            e = core.MeshEdge(edge_name)
-            edges.append(e)
-            
-        if len(edges) > 0:
-            final_edges.append(edges)
-            
-    return final_edges
-
-    
-def getBorderEdges(mesh):
-    if type(mesh) is pmnt.Mesh:
-        border_edges = core.polyListComponentConversion(mesh.faces, border=True, fromFace =True, toEdge=True)
-        border_edges = [core.MeshEdge(b) for b in border_edges]
-        separate_edges = []
-        for edges in border_edges:
-            separate_edges.extend(Component.getSeparateComponentFromSelection(edges, core.MeshEdge))
-            
-        border_loops = getBordersFromBoarderEdges(separate_edges)
-        return border_loops
-    
-
-def getInformationFromEdgeLoop(edge_loop, space="world"):
+def __getInformationFromEdgeLoop(edge_loop, space="world"):
     """
-    return vertices, vertices position, center position and area_factors(for large-small only)
-
+    return vertices, vertices' position, center position and area_factors(for large-small only)
     """
     vtx = []
+    pos = []
+    length = 0    
+        
     for edge in edge_loop:
         vtx.extend(core.polyListComponentConversion(edge, fromEdge=True, toVertex=True))
         
     vertices = core.ls(vtx, flatten=True)
     vertices = Utils.uniqueList(vertices)
-    
-    pos = []
     for vert in vertices:
         pos.append(pmdt.Vector(vert.getPosition(space)))
     
     center_pos = Utils.average(pos)
-    
-    length = 0
     for p in pos:
         length += (p-center_pos).length()
         
     area_factor = length / len(pos)
-    
     return vertices, pos, center_pos, area_factor
 
 
-def alignPivotToEdgeLoop(pivot_axis_to_align, center_pos, loop_vertex_pos):
+def __alignPivotToEdgeLoop(pivot_axis_to_align, loop_vertex_pos):
+    if len(loop_vertex_pos) < 3:
+        raise ValueError("Edges'vertices number less than 3")
+    
     rand_vert = []
     while len(rand_vert) != 3:
         vert = loop_vertex_pos[random.randint(0, len(loop_vertex_pos)-1)]
@@ -93,47 +63,167 @@ def alignPivotToEdgeLoop(pivot_axis_to_align, center_pos, loop_vertex_pos):
     
     face_normal = pmdt.normal(pmdt.cross(pos1 - pos0, pos2 - pos0))
     
-    new_rot = rotateVector(pivot_axis_to_align, face_normal)
-    rot = new_rot.asEulerRotation().asVector() * (180/pmdt.pi)
-    print(center_pos)
+    new_rot = PyMelMath.rotateVector(pivot_axis_to_align, face_normal)
+    rot = PyMelMath.quaternionToDegreeEulerVector(new_rot)
     core.manipPivot(o=rot)
     
 
-def alignPivotToCertainTrans(align_axis_str="pivot_y", func=max, space="world"):
-    sel = SelecUtils.orderedSeclect()
-    mesh = ObjTrans.getTransformShapes(sel)[0]
-    border_edges = getBorderEdges(mesh)
+def alignPivotToCertainTrans(transform, align_axis=pmdt.Vector(0,1,0), func=max, set_trans=True, set_ori=True, space="world"):
+    mesh = ObjTrans.getTransformShapes(transform)[0]
+    border_edges = Component.getBorderEdges(mesh)
+    
+    if not len(border_edges) > 0:
+        return None
     
     area_list = []
     pos_list = []
     center_list = []
 
     for loop in border_edges:
-        vertices, pos, center, area_factor = getInformationFromEdgeLoop(loop, space)
+        vertices, pos, center, area_factor = __getInformationFromEdgeLoop(loop, space)
         pos_list.append(pos)
         center_list.append(center)
         area_list.append(area_factor)
     
-    largest_list = Utils.getMostInList(area_list, func)
-    largest_index = random.randint(0, len(largest_list)-1)
+    largest_in_list = Utils.getMostInList(area_list, func)
+    largest_index = largest_in_list[random.randint(0, len(largest_in_list)-1)]
         
     final_pos_list = pos_list[largest_index]
     final_center = center_list[largest_index]
-    certain_axis = Component.AXIS_VECTOR_DICT[align_axis_str]
+    if set_ori: __alignPivotToEdgeLoop(align_axis, final_pos_list)   
+    if set_trans: ObjTrans.setPivotPosition(transform, final_center) 
     
-    alignPivotToEdgeLoop(certain_axis, final_center, final_pos_list)   
-    ObjTrans.setPivotPosition(sel[0], final_center) 
-
 
 def secondaryAxisRotation(focus_dir, first_axis="pivot_y", second_axis="pivot_x"):
-    current_pivot_rot = core.manipPivot(q=True, o=True)[0]
-    current_pivot_rot = pmdt.EulerRotation(current_pivot_rot, unit="degrees").asQuaternion()
-    first_pivot_axis = Component.AXIS_VECTOR_DICT[first_axis].rotateBy(current_pivot_rot)
-    second_pivot_axis = Component.AXIS_VECTOR_DICT[second_axis].rotateBy(current_pivot_rot)
+    if second_axis in Component.AXIS_VECTOR_DICT:
+        current_pivot_rot = getRealPivotRotation()
+        first_pivot_axis = Component.AXIS_VECTOR_DICT[first_axis].rotateBy(current_pivot_rot)
+        second_pivot_axis = Component.AXIS_VECTOR_DICT[second_axis].rotateBy(current_pivot_rot)
+        
+        project_length = pmdt.dot(focus_dir, first_pivot_axis) 
+        new_dir = pmdt.normal(focus_dir - first_pivot_axis * project_length)
+        rot_q = current_pivot_rot * PyMelMath.rotateVector(second_pivot_axis, new_dir) 
+        rot = PyMelMath.quaternionToDegreeEulerVector(rot_q)
+        print(rot)
+        core.manipPivot(o=rot)
+
+
+def pivotAlignmentMainAxis(axis_key="pivot_y", func_method="max", set_trans=True, set_ori=True, bake=False, space="world"):
+    """
+    func_method can be: 
+        max: transform mode, search the largest hole, 
+        min: transform mode, search the smallest hole, 
+        select_loop: component mode, use selected edge loop to align the tranform pivot dir, 
+        ignore: componet mode, but just for modeling
+    """
+    sel = SelecUtils.orderedSeclect()
+    certain_axis = Component.AXIS_VECTOR_DICT[axis_key]
     
-    project_length = pmdt.dot(focus_dir, first_pivot_axis) 
-    new_dir = pmdt.normal(focus_dir - first_pivot_axis * project_length)
-    rot_q = current_pivot_rot * rotateVector(second_pivot_axis, new_dir) 
-    rot = rot_q.asEulerRotation().asVector() * (180/pmdt.pi)
-    print(rot)
-    core.manipPivot(o=rot)
+    with core.UndoChunk("align primary pivot axis to edge loop"):
+        if type(sel[0]) is not pmnt.Transform:
+            vertices, pos, center, area_factor = __getInformationFromEdgeLoop(sel, space)
+            if func_method != "ignore":
+                name = sel[0].__str__().split(".")[0]
+                transform = ObjTrans.getShapeTransforms(pmnt.Mesh(name))[0]
+                if set_trans: 
+                    transform.setPivots(center, worldSpace=True)
+                    print(transform, center)
+                SelecUtils.select(transform)
+            else:
+                if set_trans: core.manipPivot(p=center)  
+            if set_ori: __alignPivotToEdgeLoop(certain_axis, pos)
+            
+        else:
+            method_dict = {"max": max, "min": min}
+            if func_method in method_dict:
+                for obj in sel:
+                    alignPivotToCertainTrans(obj, certain_axis, method_dict[func_method], set_trans, set_ori, space)
+                    if bake and len(sel) > 1:
+                        SelecUtils.select(obj)
+                        bakePivot()  
+                return None
+            raise TypeError("method should be max or min")
+        
+        
+def pivotAlignmentSecondaryAxis(axis_key="pivot_x", secondary_axis="pivot_x", main_axis="pivot_y", custom_pos=[0,0,0]):
+    """
+    axis_key can be:
+        pivot_x, pivot_y, pivot_z,
+        custom_pos: use input: custom_pos
+        ignore: do nothing
+    """
+    if axis_key == "ignore":
+        return None
+    if axis_key in Component.AXIS_VECTOR_DICT:
+        focus_dir = Component.AXIS_VECTOR_DICT[axis_key]
+    else:
+        aim_pos = pmdt.Vector(custom_pos)
+        pivot_pos = ObjTrans.getPivotPosInWorldSpace(SelecUtils.orderedSeclect()[0])
+        focus_dir = (aim_pos - pivot_pos).normal()
+    with core.UndoChunk("align secondary pivot axis to certain direction"):
+        secondaryAxisRotation(focus_dir, main_axis, secondary_axis)
+    
+    
+def bakePivot():
+    MelUtils.bakeCustomPivot()
+    
+        
+def zeroRotation():
+
+    with core.UndoChunk("zero all transform rotation"):
+        sel = SelecUtils.orderedSeclect()
+        for obj in sel:
+            if not type(obj) is pmnt.Transform:
+                return None
+            obj.setRotation(pmdt.Vector(0,0,0))
+    
+
+def invertPivotAxis(first_axis="pivot_y", second_axis="pivot_x"):
+    current_pivot_rot = getRealPivotRotation()
+        
+    if second_axis in Component.AXIS_VECTOR_DICT:
+        second_pivot_axis = Component.AXIS_VECTOR_DICT[second_axis].rotateBy(current_pivot_rot)
+        rot = current_pivot_rot*pmdt.Quaternion(pmdt.pi, second_pivot_axis)
+    else:
+        first_pivot_axis = Component.AXIS_VECTOR_DICT[first_axis].rotateBy(current_pivot_rot)
+        rot = current_pivot_rot*PyMelMath.rotateVector(first_pivot_axis, -first_pivot_axis)
+    
+    rot = PyMelMath.quaternionToDegreeEulerVector(rot)
+    core.manipPivot(o=rot) 
+
+
+def invertPivotsAxis(first_axis="pivot_y", second_axis="pivot_x"):
+    sel = SelecUtils.orderedSeclect()
+    for obj in sel:
+        invertPivotAxis(obj, first_axis, second_axis)
+           
+
+def getCurrentSelectionPositon(space="world"):
+    def theFunc():
+        try:
+            sel = SelecUtils.orderedSeclect()[0]
+        except IndexError:
+            return pmdt.Vector(0, 0, 0) 
+        print(type(sel), sel)
+        if type(sel) is pmnt.Transform:
+            return ObjTrans.getTransformPosition(sel)
+        elif type(sel) is pmnt.Mesh:
+            return ObjTrans.getTransformPosition(ObjTrans.getShapeTransforms(sel)[0], space)
+        elif type(sel) is core.MeshVertex:
+            print(sel, sel.getPosition(space))
+            return sel.getPosition(space)
+        elif type(sel) is core.MeshEdge:
+            return Utils.average2(pmdt.Vector(sel.getPoint(0, space)), pmdt.Vector(sel.getPoint(1, space)))
+        elif type(sel) is core.MeshFace:
+            points = sel.getPoints(space)
+            new_v = []
+            for point in points:
+                new_v.append(pmdt.Vector(point))
+            return Utils.average(new_v)
+        else:
+            return pmdt.Vector(0, 0, 0)
+        
+    return pmdt.Vector(theFunc())
+
+        
+        

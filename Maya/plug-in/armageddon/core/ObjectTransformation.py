@@ -38,7 +38,11 @@ def getTransformAllChildren(transform, transform_only=True, with_self=False):
             child_list.extend(ch)
                 
     return child_list
-        
+
+
+def getPivotPosInWorldSpace(transform):
+    return pmdt.Vector(core.xform(transform, q=True, piv=True, ws=True)[:3])
+
 
 def getComponetsTransforms(shape):
     c = Utils.uniqueList(shape)

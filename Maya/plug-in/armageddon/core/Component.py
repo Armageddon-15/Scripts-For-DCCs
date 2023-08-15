@@ -34,6 +34,9 @@ def getEdgePoints(edge, space="world"):
         vert.append(edge.getPoint(1, space))
     return vert
 
+def getShapeFromComponent(comp):
+    return comp.__str__().split(".")[0]
+
 
 def getFacePosition(face, space="world"):
     position = pmdt.Vector()
@@ -118,3 +121,37 @@ def pointsAlignFaceSurface(face, points, align_dir=None, max_trace_distance=1000
     pointsAlignSurfaceSeparate(face_pos, face_normal, points, align_dir, max_trace_distance, space)
     
     
+def getSortedBordersFromBoarderEdges(border_edges):
+    name = border_edges[0].__str__().split(".")[0]
+    used_edge_indices = []
+    final_edges = []
+    
+    for edge in border_edges:
+        if edge.index() in used_edge_indices:
+            continue
+        
+        edge_loop = getEdgeLoopFromEdge(edge)
+        used_edge_indices.extend(edge_loop)
+        
+        edges = []
+        for ind in edge_loop:
+            edge_name = name + ".e[%d]" % ind
+            e = core.MeshEdge(edge_name)
+            edges.append(e)
+            
+        if len(edges) > 0:
+            final_edges.append(edges)
+            
+    return final_edges
+
+    
+def getBorderEdges(mesh):
+    if type(mesh) is pmnt.Mesh:
+        border_edges = core.polyListComponentConversion(mesh.faces, border=True, fromFace =True, toEdge=True)
+        border_edges = [core.MeshEdge(b) for b in border_edges]
+        separate_edges = []
+        for edges in border_edges:
+            separate_edges.extend(getSeparateComponentFromSelection(edges, core.MeshEdge))
+            
+        border_loops = getSortedBordersFromBoarderEdges(separate_edges)
+        return border_loops

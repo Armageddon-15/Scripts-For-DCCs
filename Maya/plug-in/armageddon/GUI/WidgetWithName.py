@@ -2,6 +2,7 @@ from PySide2.QtWidgets import QWidget, QLabel, QHBoxLayout, QComboBox, QSpinBox,
 from PySide2.QtCore import Qt, Signal
 from SliderWithValueViewer import SliderWithViewer
 
+
 class WidgetWithName(QWidget):
     def __init__(self, widget_type, parent=None, name="", layout_type=QHBoxLayout, *args, **kwargs):
         super(WidgetWithName, self).__init__(parent, *args, **kwargs)
@@ -17,6 +18,20 @@ class WidgetWithName(QWidget):
         
     def setRightWidget(self, widget_type):
         self.right_widget = widget_type(self)
+        
+        
+class WidgetInstanceWithName(QWidget):
+    def __init__(self, widget, parent=None, name="", layout_type=QHBoxLayout, *args, **kwargs):
+        super(WidgetInstanceWithName, self).__init__(parent, *args, **kwargs)
+        self.name = QLabel(self)
+        self.name.setText(name)
+        
+        self.right_widget = widget
+        
+        self.layout_box = layout_type(self)
+        self.layout_box.setContentsMargins(0,0,0,0)
+        self.layout_box.addWidget(self.name)
+        self.layout_box.addWidget(self.right_widget)
         
 
 class ComboBox(WidgetWithName):
@@ -37,6 +52,9 @@ class ComboBox(WidgetWithName):
     
     def setComboBoxToolTip(self, tip):
         self.right_widget.setToolTip(tip)
+        
+    def setCurrentIndex(self, i):
+        self.right_widget.setCurrentIndex(i)
         
         
 class SpinBox(WidgetWithName):

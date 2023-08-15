@@ -18,11 +18,14 @@ def getMostInList(l, func=max):
     ans = [0]
     for i in range(len(l) - 1):
         ind = i+1
-        if l[ind] == func(l[ind], a):
+        if l[ind] == a:
             ans.append(ind)
-        else:
+        elif l[ind] == func(l[ind], a):
             ans = [ind]
             a = ind
+            # ans.append(ind)
+        # else:
+
             
     return ans
 
@@ -38,6 +41,6 @@ def uniqueList(l):
     return new_list
 
 
-def appendListIfUnique(l, item):
+def appendToListIfUnique(l, item):
     if not item in l:
         l.append(item)
