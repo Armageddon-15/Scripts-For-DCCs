@@ -11,8 +11,8 @@ from PySide2.QtCore import *
 from PySide2.QtGui import * 
 from PySide2.QtWidgets import *
 
-WIDGET_TITLE_NAME = "Pivot Alignment"
-WIDGET_OBJECT_NAME = "pivot_alignment"
+WIDGET_TITLE_NAME = "Pivot Align Tube"
+WIDGET_OBJECT_NAME = "pivot_align_tube"
 
 class PivotAligment(QWidget):
     def __init__(self, parent=None, *args, **kwargs):

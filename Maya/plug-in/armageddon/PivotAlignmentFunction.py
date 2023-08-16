@@ -4,6 +4,7 @@ import core.SelectionUtil as SelecUtils
 import core.ObjectTransformation as ObjTrans
 import core.PyMelMath as PyMelMath
 import core.MelUtils as MelUtils
+import core.MayaWarning as MWaring
 
 import pymel.core as core
 import pymel.core.nodetypes as pmnt
@@ -104,7 +105,7 @@ def secondaryAxisRotation(focus_dir, first_axis="pivot_y", second_axis="pivot_x"
         new_dir = pmdt.normal(focus_dir - first_pivot_axis * project_length)
         rot_q = current_pivot_rot * PyMelMath.rotateVector(second_pivot_axis, new_dir) 
         rot = PyMelMath.quaternionToDegreeEulerVector(rot_q)
-        print(rot)
+        # print(rot)
         core.manipPivot(o=rot)
 
 
@@ -127,7 +128,7 @@ def pivotAlignmentMainAxis(axis_key="pivot_y", func_method="max", set_trans=True
                 transform = ObjTrans.getShapeTransforms(pmnt.Mesh(name))[0]
                 if set_trans: 
                     transform.setPivots(center, worldSpace=True)
-                    print(transform, center)
+                    # print(transform, center)
                 SelecUtils.select(transform)
             else:
                 if set_trans: core.manipPivot(p=center)  
@@ -158,7 +159,15 @@ def pivotAlignmentSecondaryAxis(axis_key="pivot_x", secondary_axis="pivot_x", ma
         focus_dir = Component.AXIS_VECTOR_DICT[axis_key]
     else:
         aim_pos = pmdt.Vector(custom_pos)
-        pivot_pos = ObjTrans.getPivotPosInWorldSpace(SelecUtils.orderedSeclect()[0])
+        sel = SelecUtils.orderedSeclect()[0]
+        if type(sel) is pmnt.Transform:
+            pivot_pos = ObjTrans.getPivotPosInWorldSpace(sel)
+        else:
+            pivot_pos = pmdt.Vector(core.manipPivot(q=True, p=True)[0])
+            pos_valid = core.manipPivot(q=True, posValid=True)
+            if not pos_valid: 
+                MWaring.warning("Cannot get correct pivot position when pivot not modified, please mannully make a custom pivot")
+                
         focus_dir = (aim_pos - pivot_pos).normal()
     with core.UndoChunk("align secondary pivot axis to certain direction"):
         secondaryAxisRotation(focus_dir, main_axis, secondary_axis)
@@ -204,13 +213,13 @@ def getCurrentSelectionPositon(space="world"):
             sel = SelecUtils.orderedSeclect()[0]
         except IndexError:
             return pmdt.Vector(0, 0, 0) 
-        print(type(sel), sel)
+        # print(type(sel), sel)
         if type(sel) is pmnt.Transform:
             return ObjTrans.getTransformPosition(sel)
         elif type(sel) is pmnt.Mesh:
             return ObjTrans.getTransformPosition(ObjTrans.getShapeTransforms(sel)[0], space)
         elif type(sel) is core.MeshVertex:
-            print(sel, sel.getPosition(space))
+            # print(sel, sel.getPosition(space))
             return sel.getPosition(space)
         elif type(sel) is core.MeshEdge:
             return Utils.average2(pmdt.Vector(sel.getPoint(0, space)), pmdt.Vector(sel.getPoint(1, space)))
