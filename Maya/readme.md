@@ -1,6 +1,6 @@
 # Maya Script
 
-For maya 2020 and use python 2.7
+For maya 2020 using python 2.7
 
 # 插件简介
 
@@ -18,7 +18,9 @@ For maya 2020 and use python 2.7
 
 之后打开这个仓库里的 `plug-in` 目录将其中的文件和文件夹都放到通过上述代码中得到的任一路径中
 
-接着打开maya（如果之前打开过就关闭后重开），在代码编辑器中执行 python 语句：
+接着打开maya（如果之前打开过就关闭后重开），先打开插件管理器，开启插件Armageddon.py
+
+再在代码编辑器中执行 python 语句：
 
     import armageddon.MainWindow as armw
     armw.show()
@@ -70,4 +72,15 @@ For maya 2020 and use python 2.7
 
 这也是我第一个用OpenMaya2写的功能（上面都是pymel），om2的例子其实还挺舒服的，配合c++文档理解并不难
 
-唯一想吐槽的是转换选择（比如面转点），本来用om2就是因为pymel因为要适配cmd所以会有不必要的字符串操作，om2更原生一些，但这个转换操作的c++例子都是组字符串。属实难蚌
+另外想吐槽的是转换选择（比如面转点），本来用om2就是因为pymel因为要适配cmd所以会有不必要的字符串操作，om2更原生一些，但这个转换操作的c++例子都是组字符串。属实难蚌
+
+## Pivot Align Tube
+
+专门用来对齐枢轴的
+
+对长得像管道的、完全由4边面组成、两边有洞的几何体效果最佳
+
+但对任意多边形来说也会有一部分功能会与预期相符，可以慢慢探索
+
+会出视频介绍
+
