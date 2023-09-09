@@ -55,4 +55,14 @@
 
 所有sp可能需要的贴图都在这里，opacity没用过不知道是不是alpha test，但也先这么放了
 
-本来想做两个按钮，第一个控制是否在面板显示，第二个才是开启关闭，但还是找不到面板显示的接口，所以贴图想一直留在面板的话就得手动点的
+本来想做两个按钮，第一个控制是否在面板显示，第二个才是开启关闭，但还是找不到面板显示的接口，所以贴图想一直留在面板的话就得手动点了
+
+<br/>
+<br/>
+
+# 其他
+总感觉八猴的插件教程比sp还要少，就找到两篇：
+
+[八猴员工的](https://alain.xyz/blog/marmoset-toolbag-python-intro)
+
+[官网的](https://marmoset.co/posts/python-scripting-toolbag/)
