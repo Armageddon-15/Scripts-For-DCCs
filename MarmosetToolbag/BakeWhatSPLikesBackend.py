@@ -50,12 +50,7 @@ def setAllSettings(using_path: bool, prefix_path: str, using_subfolder: bool, cr
 
 
 def __getBakers(fun):
-    scene_objects = fun()
-    baker_objects = []
-    for obj in scene_objects:
-        if type(obj) is mset.BakerObject:
-            baker_objects.append(obj)
-
+    baker_objects = Utils.getCertainTypeWithCertainFunc(fun, mset.BakerObject)
     return baker_objects
 
 
