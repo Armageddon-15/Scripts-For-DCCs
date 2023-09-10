@@ -5,6 +5,8 @@
 
 # Auto Fill Baked Textures
 
+<img src="imgs/auto_fill_baked_texture_backend_ui.jpg">
+
 一般外部烘焙高模导入时要一张张贴图拖（比如八猴），这个插件可以根据前后缀匹配贴图并自动放到对应位置
 
 ## 安装
@@ -13,11 +15,29 @@
 
 安装完成后可以reload一下，不过保险起见最好重启软件
 
+## 打开
+![](imgs/python_path_enable.jpg)
+
+首先确认开启插件（勾上）
+
+![](imgs/window_path.jpg)
+
+其次在窗口界面确认打开窗口（还是勾上）
+
+就能看到窗口了
+
 ## 用法
 
 1. 把烘焙好的贴图导入进来
 2. 在插件界面填写对应前缀(prefix name)后缀(suffix)
 3. 确认无误点击apply按钮即可
+
+
+## 功能
+
+按钮 `Match Current Texture Set Name` 意思是获取当然贴图集的名称，名称一致时比较方便
+
+预设可以储存
 
 
 ## 注意
