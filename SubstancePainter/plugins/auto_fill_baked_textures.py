@@ -271,6 +271,10 @@ class MainWindow(QWidget):
         # self.file_sep = Separator(self)
 
         self.prefix_editor = NameEditorWidget(self, "Prefix")
+
+        self.match_texture_set_name = QPushButton(self)
+        self.match_texture_set_name.setText("Match Current Texture Set Name")
+        self.match_texture_set_name.clicked.connect(self.matchTextureSetName)
         self.separator = Separator(self)
 
         self.suffix_widget = SuffixWidget(self)
@@ -297,6 +301,7 @@ class MainWindow(QWidget):
         # self.vbox.addWidget(self.file_picker)
         # self.vbox.addWidget(self.file_sep)
         self.vbox.addWidget(self.prefix_editor)
+        self.vbox.addWidget(self.match_texture_set_name)
         self.vbox.addWidget(self.separator)
         self.vbox.addWidget(self.preset_widget)
         self.vbox.addWidget(self.suffix_widget)
@@ -315,6 +320,10 @@ class MainWindow(QWidget):
 
     def updatePreset(self, name: str):
         self.suffix_widget.setAllSuffixes(backend.getPreset(name))
+
+    def matchTextureSetName(self):
+        name = backend.getActivTextureSetName()
+        self.prefix_editor.value_string = name
 
     def toTextureSet(self):
         suffixes = self.suffix_widget.getAllSuffixes()

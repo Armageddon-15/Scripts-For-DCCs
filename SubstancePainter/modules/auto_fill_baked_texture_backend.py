@@ -92,6 +92,11 @@ def getActiveTextureSet():
     return sp_ts.get_active_stack().material()
 
 
+def getActivTextureSetName():
+    texture_set = getActiveTextureSet()
+    return texture_set.name()
+
+
 def getMeshMapUsage(usage: str):
     try:
         u = getattr(sp_ts.MeshMapUsage, usage)
