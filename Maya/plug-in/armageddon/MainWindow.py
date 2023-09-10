@@ -2,7 +2,7 @@
 
 import Parameters
 
-import LocationByBoundingBox, Modeling, PivotAlignment
+import LocationByBoundingBox, Modeling, PivotAlignment, BakePreparation
 from GUI import CollapsibleWidget
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
@@ -36,8 +36,12 @@ class ItemWidget(QWidget):
         self.pivot_align_widget = PivotAlignment.PivotAligment(self)
         self.pivot_align_collapsible_header = CollapsibleWidget.CollapsibleHeader(self, PivotAlignment.WIDGET_TITLE_NAME,
                                                                                self.pivot_align_widget)
-        
-        self.panel_list = [self.location_collapsible_header, self.modeling_collapsible_header, self.pivot_align_collapsible_header]
+                
+        self.bake_preparation_widget = BakePreparation.BakePreparation(self)
+        self.bake_preparation_collapsible_header = CollapsibleWidget.CollapsibleHeader(self, BakePreparation.WIDGET_TITLE_NAME,
+                                                                               self.bake_preparation_widget)        
+        self.panel_list = [self.location_collapsible_header, self.modeling_collapsible_header, 
+                           self.pivot_align_collapsible_header, self.bake_preparation_collapsible_header]
 
         self.tab_widget = QTabWidget(self)
         self.tab_widget.setMovable(True)
