@@ -11,6 +11,13 @@ class Setting:
     low_poly_suffix = "_low"
 
 
+def setSetting(low_suffix, hi_suffix):
+    if type(low_suffix) is str:
+        Setting.low_poly_suffix = low_suffix
+    if type(hi_suffix) is str:
+        Setting.high_poly_suffix = hi_suffix
+
+
 def polyToNewBaker(hi_poly, low_poly, name=""):
     baker = mset.BakerObject()
     baker.name = name

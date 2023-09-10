@@ -10,6 +10,9 @@ class MatchHiLowToBaker:
     fin_window = mset.UIWindow("Finish Win")
 
     def __init__(self):
+        self.high_suffix = mset.UITextField()
+        self.low_suffix = mset.UITextField()
+
         self.match_all_btn = mset.UIButton("Match All")
         self.match_select_btn = mset.UIButton("Match Selection")
 
@@ -22,6 +25,12 @@ class MatchHiLowToBaker:
         self.initFinDrawer()
 
     def show(self):
+        self.start_window.addElement(mset.UILabel("High Poly Suffix: "))
+        self.start_window.addElement(self.high_suffix)
+        self.start_window.addReturn()
+        self.start_window.addElement(mset.UILabel("Low Poly Suffix: "))
+        self.start_window.addElement(self.low_suffix)
+        self.start_window.addReturn()
         self.start_window.addElement(self.match_all_btn)
         self.start_window.addStretchSpace()
         self.start_window.addElement(self.match_select_btn)
@@ -36,6 +45,8 @@ class MatchHiLowToBaker:
 
     def initStartDrawer(self):
         self.start_drawer.containedControl = self.start_window
+        self.high_suffix.value = "_hi"
+        self.low_suffix.value = "_low"
         self.match_all_btn.onClick = self.matchAll
         self.match_select_btn.onClick = self.matchSelection
 
@@ -43,6 +54,7 @@ class MatchHiLowToBaker:
         self.fin_drawer.containedControl = self.fin_window
 
     def apply(self):
+        Backend.setSetting(self.low_suffix.value, self.high_suffix.value)
         Backend.matchingNames(self.no_match_creation_cbox.value)
 
     def matchAll(self):
