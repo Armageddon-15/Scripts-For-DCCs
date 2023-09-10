@@ -9,3 +9,7 @@ def maya_useNewAPI():
 
 def warning(info):
     om2.MGlobal.displayWarning(info)
+    
+    
+def information(info):
+    om2.MGlobal.displayInfo(info)
