@@ -6,6 +6,10 @@ For maya 2020 using python 2.7
 
 本质上是自用的插件，所以并适配其他版本的优先级并不高。只不过有时间后也能也会适配其他版本
 
+# 安装前准备
+
+请确定maya已经安装了pymel
+
 # 插件安装
 
 下载好文件后
@@ -43,6 +47,8 @@ For maya 2020 using python 2.7
 # 主要功能
 
 多数功能在鼠标停留到按钮上会有详细描述，这里仅粗略介绍
+
+[视频介绍](https://www.bilibili.com/video/BV1BV411w7hA)
 
 ## Transformation And Bounding Box
 
