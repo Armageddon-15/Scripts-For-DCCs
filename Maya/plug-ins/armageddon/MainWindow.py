@@ -1,5 +1,8 @@
 # -*- coding: UTF-8 -*-
+import sys
 
+for path in sys.path:
+    print(path)
 import Parameters
 
 import LocationByBoundingBox, Modeling, PivotAlignment, BakePreparation
