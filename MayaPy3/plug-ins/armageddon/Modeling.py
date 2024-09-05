@@ -1,12 +1,12 @@
 # -*- coding: UTF-8 -*-
 
-from GUI import Separator, WidgetWithHeader, WidgetWithName
-import GUI.Utils as GuiUtils
+from .GUI import Separator, WidgetWithHeader, WidgetWithName
+from .GUI import Utils as GuiUtils
 
-import ModelingFunction
-import BetterNormalFunction
+from . import ModelingFunction
+from . import BetterNormalFunction
 
-from GUI.MayaMainWindow import setWidgetAsMayaMainWindow
+from .GUI.MayaMainWindow import setWidgetAsMayaMainWindow
 
 from PySide2.QtCore import * 
 from PySide2.QtGui import * 

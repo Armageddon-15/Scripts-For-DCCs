@@ -86,5 +86,5 @@ def reloadAllPythonFiles(exclude_filenames=None):
 
         module = importlib.import_module(module_full_name, package=None)
         # print(module)
-        reload(module)
+        importlib.reload(module)
         print("Reloaded '{}'".format(py_file))

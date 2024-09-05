@@ -1,6 +1,6 @@
 from PySide2.QtWidgets import QWidget, QLabel, QHBoxLayout, QComboBox, QSpinBox, QAbstractSpinBox, QDoubleSpinBox
 from PySide2.QtCore import Qt, Signal
-from SliderWithValueViewer import SliderWithViewer
+from .SliderWithValueViewer import SliderWithViewer
 
 
 class WidgetWithName(QWidget):

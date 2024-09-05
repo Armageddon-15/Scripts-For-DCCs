@@ -1,4 +1,4 @@
-import Utils
+from . import Utils
 
 import pymel.core as core
 import pymel.core.nodetypes as pmnt

@@ -1,10 +1,10 @@
-import core.Utils as Utils
-import core.Component as Component
-import core.SelectionUtil as SelecUtils
-import core.ObjectTransformation as ObjTrans
-import core.PyMelMath as PyMelMath
-import core.MelUtils as MelUtils
-import core.MayaWarning as MWaring
+from .core import Utils as Utils
+from .core import Component as Component
+from .core import SelectionUtil as SelecUtils
+from .core import ObjectTransformation as ObjTrans
+from .core import PyMelMath as PyMelMath
+from .core import MelUtils as MelUtils
+from .core import MayaWarning as MWaring
 
 import pymel.core as core
 import pymel.core.nodetypes as pmnt

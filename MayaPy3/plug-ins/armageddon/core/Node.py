@@ -2,7 +2,7 @@ import pymel.core as core
 import pymel.core.datatypes as pmdt
 import pymel.core.nodetypes as pmnt
 
-import MayaWarning
+from . import MayaWarning
 
 def copyNode(node):
     try: 

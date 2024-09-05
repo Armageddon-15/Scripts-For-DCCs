@@ -12,7 +12,7 @@ from PySide2.QtCore import Qt
     
 def getMayaMainWindow():
     maya_main_window_ptr = omui.MQtUtil.mainWindow() 
-    maya_main_window = wrapInstance(long(maya_main_window_ptr), QWidget) 
+    maya_main_window = wrapInstance(int(maya_main_window_ptr), QWidget)
     return maya_main_window
 
 

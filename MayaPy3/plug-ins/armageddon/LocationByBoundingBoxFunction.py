@@ -1,6 +1,6 @@
-import core.ObjectTransformation as ObjTrans
-import core.SelectionUtil as SelectUtils
-import core.Utils as Utils
+from .core import ObjectTransformation as ObjTrans
+from .core import SelectionUtil as SelectUtils
+from .core import Utils as Utils
 
 import pymel.core as core
 import pymel.core.nodetypes as pmnt

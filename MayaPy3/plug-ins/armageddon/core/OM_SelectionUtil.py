@@ -1,5 +1,5 @@
 import maya.api.OpenMaya as om2
-import Utils
+from . import Utils
 
 
 def vertexIndexToSelection(shape_path, vertices):

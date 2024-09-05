@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*- 
-
 import sys
 import maya.api.OpenMaya as om
 from armageddon import MainWindow
+
 
 def maya_useNewAPI():
     """

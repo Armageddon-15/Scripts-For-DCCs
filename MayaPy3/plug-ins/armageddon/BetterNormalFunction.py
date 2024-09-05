@@ -1,7 +1,7 @@
 import maya.api.OpenMaya as om2
 import pymel.core as core
 
-import core.OM_SelectionUtil as OMSelUtil
+from .core import OM_SelectionUtil as OMSelUtil
 
 
 def maya_useNewAPI():

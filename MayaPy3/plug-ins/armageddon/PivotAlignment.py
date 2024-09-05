@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
 
-from GUI import Separator, WidgetWithHeader, WidgetWithName, VectorVis
-import GUI.Utils as GuiUtils
+from .GUI import Separator, WidgetWithHeader, WidgetWithName, VectorVis
+from .GUI import Utils as GuiUtils
 
-import PivotAlignmentFunction
+from . import PivotAlignmentFunction
 
-from GUI.MayaMainWindow import setWidgetAsMayaMainWindow
+from .GUI.MayaMainWindow import setWidgetAsMayaMainWindow
 
 from PySide2.QtCore import * 
 from PySide2.QtGui import * 

@@ -1,10 +1,10 @@
 # -*- coding: UTF-8 -*-
 
-import core.ObjectTransformation as ObjTrans
-import core.SelectionUtil as SelectUtils
-import core.Utils as Utils
-import core.Node as Node
-import core.MayaWarning as MayaWarning
+from .core import ObjectTransformation as ObjTrans
+from .core import SelectionUtil as SelectUtils
+from .core import Utils as Utils
+from .core import Node as Node
+from .core import MayaWarning as MayaWarning
 
 import pymel.core as core
 import pymel.core.nodetypes as pmnt

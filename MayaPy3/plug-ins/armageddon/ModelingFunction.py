@@ -1,6 +1,6 @@
-import core.Utils as Utils
-import core.Component as Component
-import core.SelectionUtil as SelecUtils
+from .core import Utils as Utils
+from .core import Component as Component
+from .core import SelectionUtil as SelecUtils
 
 import pymel.core as core
 import pymel.core.nodetypes as pmnt

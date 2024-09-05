@@ -1,6 +1,6 @@
 # Maya Script
 
-For maya 2020 using python 2.7
+For maya 2024 using python 3.10
 
 # 插件简介
 
@@ -12,16 +12,22 @@ For maya 2020 using python 2.7
 
 # 插件安装
 
-下载好文件后
+下载好文件先解压到你觉得合适的路径，比如：
 
-首先在maya中用mel执行
-    
-    getenv MAYA_PLUG_IN_PATH
+    E:\Python-Scripts-For-DCCs\MayaPy3
 
-获取插件的路径（会在一行中又一堆路径，用英文分号隔开，任选其一即可）
+之后到我的文档：
 
-之后打开这个仓库里的 `plug-in` 目录将其中的文件和文件夹都放到通过上述代码中得到的任一路径中
+    用户名\我的文档\maya\modules
 
+中增加文件 `Armageddon.mod`
+
+并在其中添加这样一段文字：
+
+    + MayaPy3 0.0.2 E:\Python-Scripts-For-DCCs\MayaPy3
+
+其中 `E:\Python-Scripts-For-DCCs` 是你刚才解压的路径
+ 
 接着打开maya（如果之前打开过就关闭后重开），先打开插件管理器，开启插件Armageddon.py
 
 再在代码编辑器中执行 python 语句：

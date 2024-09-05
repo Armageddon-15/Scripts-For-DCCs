@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
-import Parameters
-import LocationByBoundingBoxFunction as Func
+from . import Parameters
+from . import LocationByBoundingBoxFunction as Func
 
-from GUI import Separator, RadioGroup, WidgetWithHeader
-import GUI.Utils as GuiUtils
+from .GUI import Separator, RadioGroup, WidgetWithHeader
+from .GUI import Utils as GuiUtils
 
-from GUI.MayaMainWindow import setWidgetAsMayaMainWindow
+from .GUI.MayaMainWindow import setWidgetAsMayaMainWindow
 
 from PySide2.QtCore import * 
 from PySide2.QtGui import * 
