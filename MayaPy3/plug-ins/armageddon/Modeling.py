@@ -12,6 +12,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import * 
 from PySide2.QtWidgets import *
 
+PRIORITY = 1
 WIDGET_TITLE_NAME = "Modeling"
 WIDGET_OBJECT_NAME = "modeling"
 
@@ -169,6 +170,10 @@ class Modeling(QWidget):
         self.vbox.addWidget(self.alignment_widget)
         self.vbox.addWidget(self.better_normal_widget)
 
+
+
+def createWidget(obj):
+    return Modeling(obj)
 
 
 def show():

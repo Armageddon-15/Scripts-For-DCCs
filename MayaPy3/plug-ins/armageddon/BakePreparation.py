@@ -11,6 +11,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import * 
 from PySide2.QtWidgets import *
 
+PRIORITY = 0
 WIDGET_TITLE_NAME = "Bake Preparation"
 WIDGET_OBJECT_NAME = "bake_preparation"
 
@@ -51,7 +52,11 @@ class BakePreparation(QWidget):
         BakePreparationFunction.uniqueEachMaterial(self.include_children_cbox.isChecked())
         
         
-        
+
+def createWidget(obj):
+    return BakePreparation(obj)
+
+
 def show():
     print("\n==== Start", WIDGET_TITLE_NAME, "=====\n")
     ui = BakePreparation()

@@ -1,6 +1,6 @@
 from . import Parameters
 
-from . import LocationByBoundingBox, Modeling, PivotAlignment, BakePreparation
+# from . import LocationByBoundingBox, Modeling, PivotAlignment, BakePreparation
 from .GUI import CollapsibleWidget
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
@@ -8,6 +8,10 @@ from .GUI.MayaMainWindow import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+
+import os
+import importlib
+import sys
 
 if not "main_ui" in globals():
     main_ui = None
@@ -23,23 +27,14 @@ class ItemWidget(QWidget):
         # 1 - tab
         self.current_layout = 0
 
-        self.location_widget = LocationByBoundingBox.LocationByBoundingBox(self)
-        self.location_collapsible_header = CollapsibleWidget.CollapsibleHeader(self, LocationByBoundingBox.WIDGET_TITLE_NAME,
-                                                                               self.location_widget)
+        self.widgets = []
+        self.panel_list = []
+        modules = packageCheck()
 
-        self.modeling_widget = Modeling.Modeling(self)
-        self.modeling_collapsible_header = CollapsibleWidget.CollapsibleHeader(self, Modeling.WIDGET_TITLE_NAME,
-                                                                               self.modeling_widget)
-
-        self.pivot_align_widget = PivotAlignment.PivotAligment(self)
-        self.pivot_align_collapsible_header = CollapsibleWidget.CollapsibleHeader(self, PivotAlignment.WIDGET_TITLE_NAME,
-                                                                               self.pivot_align_widget)
-
-        self.bake_preparation_widget = BakePreparation.BakePreparation(self)
-        self.bake_preparation_collapsible_header = CollapsibleWidget.CollapsibleHeader(self, BakePreparation.WIDGET_TITLE_NAME,
-                                                                               self.bake_preparation_widget)
-        self.panel_list = [self.location_collapsible_header, self.modeling_collapsible_header,
-                           self.pivot_align_collapsible_header, self.bake_preparation_collapsible_header]
+        for mod in modules:
+            widget = mod.createWidget(self)
+            self.widgets.append(widget)
+            self.panel_list.append(CollapsibleWidget.CollapsibleHeader(self, mod.WIDGET_TITLE_NAME, widget))
 
         self.tab_widget = QTabWidget(self)
         self.tab_widget.setMovable(True)
@@ -126,6 +121,46 @@ class MainWindow(MayaQWidgetDockableMixin, QMainWindow):
         elif self.item_widget.current_layout == 1:
             self.item_widget.switchToScroll()
 
+
+
+def packageCheck():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    root_pack = os.path.basename(current_dir)
+    modules = []
+    module_dict = {}
+    default_mods = []
+    for file in os.listdir(current_dir):
+        filename, ext = os.path.splitext(file)
+        if ext != ".py":
+            continue
+        module_name = filename
+        if not os.path.exists(os.path.join(current_dir, module_name + "Function.py")):
+            continue
+        print(f"Trying to import {module_name}")
+        try:
+            mod = importlib.import_module("." + module_name, package=root_pack)
+            modules.append(mod)
+        except Exception as e:
+            print(f"Failed to import {module_name}: {e}")
+            continue
+        print(f"import {module_name} successfully")
+
+        try:
+            priority = mod.PRIORITY
+        except Exception as e:
+            default_mods.append(mod)
+        else:
+            if priority not in module_dict.keys():
+                module_dict.update({priority: [mod]})
+            else:
+                module_dict[priority].append(mod)
+
+    sorted_dict = sorted(module_dict.items())
+    sort_mods = []
+    for _, item in sorted_dict:
+        sort_mods.extend(item)
+    sort_mods.extend(default_mods)
+    return sort_mods
 
 
 def DockableWidgetUIScript():

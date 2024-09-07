@@ -11,6 +11,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import * 
 from PySide2.QtWidgets import *
 
+PRIORITY = 0
 WIDGET_TITLE_NAME = "Pivot Align Tube"
 WIDGET_OBJECT_NAME = "pivot_align_tube"
 
@@ -137,8 +138,12 @@ class PivotAligment(QWidget):
         
     def zeroRotation(self):
         PivotAlignmentFunction.zeroRotation()
-        
-        
+
+
+def createWidget(obj):
+    return PivotAligment(obj)
+
+
 def show():
     print("\n==== Start", WIDGET_TITLE_NAME, "=====\n")
     ui = PivotAligment()

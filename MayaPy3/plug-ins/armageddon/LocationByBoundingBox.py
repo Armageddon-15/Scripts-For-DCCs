@@ -11,6 +11,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import * 
 from PySide2.QtWidgets import *
 
+PRIORITY = 0
 WIDGET_TITLE_NAME = "Transformation And Bounding Box"
 WIDGET_OBJECT_NAME = "transformation_and_bounding_box"
 
@@ -213,7 +214,8 @@ class LocationByBoundingBox(QWidget):
         Func.moveToWorldCenterByPivot(self.getIfMoveExcludeChildren(), self.getIfKeepPivotOffset())           
         
 
-        
+def createWidget(obj):
+    return LocationByBoundingBox(obj)
 
 
 def show():

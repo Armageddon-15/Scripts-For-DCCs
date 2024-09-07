@@ -1,4 +1,4 @@
-from PySide2.QtWidgets import QWidget, QLabel, QHBoxLayout, QComboBox, QSpinBox, QAbstractSpinBox, QDoubleSpinBox
+from PySide2.QtWidgets import QWidget, QLabel, QHBoxLayout, QComboBox, QSpinBox, QAbstractSpinBox, QDoubleSpinBox, QLineEdit
 from PySide2.QtCore import Qt, Signal
 from .SliderWithValueViewer import SliderWithViewer
 
@@ -75,8 +75,20 @@ class SpinBox(WidgetWithName):
 
     def setMinValue(self, v):
         self.right_widget.setMinimum(v)
-        
-        
+
+
+class LineEdit(WidgetWithName):
+    def __init__(self, *args, **kwargs):
+        super(LineEdit, self).__init__(QLineEdit, *args, **kwargs)
+        self.right_widget.setAlignment(Qt.AlignRight)
+
+    def setValue(self, v):
+        self.right_widget.setText(v)
+
+    def getValue(self):
+        return self.right_widget.text()
+
+
 class DoubleSpinBox(WidgetWithName):
     def __init__(self, *args, **kwargs):
         super(DoubleSpinBox, self).__init__(QDoubleSpinBox, *args, **kwargs)
