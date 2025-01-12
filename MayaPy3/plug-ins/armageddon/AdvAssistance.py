@@ -3,7 +3,7 @@ from . import AdvAssistanceFunction as AdvFunc
 from .Translate import TranslatorManager
 from .GUI import Utils as GuiUtils
 
-from .GUI.MayaMainWindow import setWidgetAsMayaMainWindow
+from .GUI import PanelWidget
 
 from PySide2.QtCore import * 
 from PySide2.QtGui import * 
@@ -14,12 +14,9 @@ WIDGET_TITLE_NAME = "Adv Assistance"
 WIDGET_OBJECT_NAME = "advance_skeleton_assistance"
 
 
-class AdvAssistance(QWidget):
+class AdvAssistance(PanelWidget.PanelWidget):
     def __init__(self, parent=None, *args, **kwargs):
-        super(AdvAssistance, self).__init__(parent, *args, **kwargs)
-
-        if parent is None:
-            setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
+        super(AdvAssistance, self).__init__(parent, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME, *args, **kwargs)
 
         self.control_include_inbetween = GuiUtils.addWidget(self, QCheckBox)
         TranslatorManager.getTranslator().addTranslate(self.control_include_inbetween.setText, "Include Inbetween")
@@ -40,9 +37,7 @@ class AdvAssistance(QWidget):
 def createWidget(obj):
     return AdvAssistance(obj)
 
-
 def show():
-    print("\n==== Start", WIDGET_TITLE_NAME, "=====\n")
     ui = AdvAssistance()
-    ui.show()
+    ui.showWindow()
     return ui

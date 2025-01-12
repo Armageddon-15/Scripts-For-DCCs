@@ -8,7 +8,7 @@ from .Translate import TranslatorManager
 from . import ModelingFunction
 from . import BetterNormalFunction
 
-from .GUI.MayaMainWindow import setWidgetAsMayaMainWindow
+from .GUI import PanelWidget
 
 from PySide2.QtCore import * 
 from PySide2.QtGui import * 
@@ -22,10 +22,7 @@ WIDGET_OBJECT_NAME = "modeling"
 class AlignmentWidget(QWidget):
     def __init__(self, parent=None, *args, **kwargs):
         super(AlignmentWidget,self).__init__(parent, *args, **kwargs)
-        
-        if parent is None:
-            setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
-        
+
         self.align_header = WidgetWithHeader.WidgetWithHeader(self)
         TranslatorManager.getTranslator().addTranslate(self.align_header.header.setText, "Alignment")
         
@@ -78,10 +75,6 @@ class AlignmentWidget(QWidget):
 class BetterNormal(QWidget):
     def __init__(self, parent=None, *args, **kwargs):
         super(BetterNormal,self).__init__(parent, *args, **kwargs)
-        
-        if parent is None:
-            setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
-            
         
         self.header = WidgetWithHeader.WidgetWithHeader(self)
         TranslatorManager.getTranslator().addTranslate(self.header.header.setText, "Better Normal")
@@ -158,12 +151,9 @@ class BetterNormal(QWidget):
 
         
         
-class Modeling(QWidget):
+class Modeling(PanelWidget.PanelWidget):
     def __init__(self, parent=None, *args, **kwargs):
         super(Modeling, self).__init__(parent, *args, **kwargs)
-                
-        if parent is None:
-            setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
             
         self.alignment_widget = AlignmentWidget(self)
         self.better_normal_widget = BetterNormal(self)
@@ -184,7 +174,6 @@ def createWidget(obj):
 
 
 def show():
-    print("\n==== Start", WIDGET_TITLE_NAME, "=====\n")
     ui = Modeling()
-    ui.show()
+    ui.showWindow()
     return ui

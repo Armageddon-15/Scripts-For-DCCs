@@ -104,13 +104,9 @@ class MainWindow(MayaQWidgetDockableMixin, QMainWindow):
         else:
             setWidgetName(self, Parameters.MAIN_WIDGET_TITLE_NAME, Parameters.MAIN_WIDGET_OBJECT_NAME)
 
-
+        self.central_widget = None
         self.addSettingsMenu()
         self.addLanguageMenu()
-
-        self.item_widget = ItemWidget(self)
-        self.setCentralWidget(self.item_widget)
-
 
     def addSettingsMenu(self):
         setting_menu = QMenu(self)
@@ -130,21 +126,24 @@ class MainWindow(MayaQWidgetDockableMixin, QMainWindow):
         switch_action.triggered.connect(self.switchLanguage)
         setting_menu.addAction(switch_action)
 
+    def setMainWindow(self, widget_type):
+        self.central_widget = widget_type(self)
+        self.setCentralWidget(self.central_widget)
+
 
     def switchLayout(self):
-        if self.item_widget.current_layout == 0:
-            self.item_widget.switchToTab()
-        elif self.item_widget.current_layout == 1:
-            self.item_widget.switchToScroll()
+        if type(self.central_widget) is not ItemWidget:
+            return
+        if self.central_widget.current_layout == 0:
+            self.central_widget.switchToTab()
+        elif self.central_widget.current_layout == 1:
+            self.central_widget.switchToScroll()
 
     def switchLanguage(self):
         TranslatorManager.switchLanguage()
-        if self.item_widget.current_layout == 1:
-            self.item_widget.switchToTab()
+        if self.central_widget.current_layout == 1:
+            self.central_widget.switchToTab()
 
-
-    def destroyed(self, *args, **kwargs):
-        print("hi")
 
 
 
@@ -192,6 +191,7 @@ def DockableWidgetUIScript():
     global main_ui
     TranslatorManager.resetTranslator()
     main_ui = MainWindow(getMayaMainWindow())
+    main_ui.setMainWindow(ItemWidget)
     main_ui.show(dockable=True)
     main_ui.switchLayout()
     return main_ui

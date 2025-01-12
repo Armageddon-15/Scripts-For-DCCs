@@ -1,11 +1,9 @@
-# -*- coding: UTF-8 -*-
-
 from .Translate import TranslatorManager
 from .GUI import Utils as GuiUtils
 
 from . import BakePreparationFunction
 
-from .GUI.MayaMainWindow import setWidgetAsMayaMainWindow
+from .GUI import PanelWidget
 
 from PySide2.QtCore import * 
 from PySide2.QtGui import * 
@@ -16,14 +14,10 @@ WIDGET_TITLE_NAME = "Bake Preparation"
 WIDGET_OBJECT_NAME = "bake_preparation"
 
 
-class BakePreparation(QWidget):
+class BakePreparation(PanelWidget.PanelWidget):
     def __init__(self, parent=None, *args, **kwargs):
         super(BakePreparation,self).__init__(parent, *args, **kwargs)
-        
-        if parent is None:
-            setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
 
-        
         self.include_children_cbox = GuiUtils.addWidget(self, QCheckBox)
         TranslatorManager.getTranslator().addTranslate(self.include_children_cbox.setText, "Include Children")
         
@@ -61,7 +55,6 @@ def createWidget(obj):
 
 
 def show():
-    print("\n==== Start", WIDGET_TITLE_NAME, "=====\n")
     ui = BakePreparation()
-    ui.show()
+    ui.showWindow()
     return ui

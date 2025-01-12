@@ -6,7 +6,7 @@ from .Translate import TranslatorManager
 from .GUI import Separator, RadioGroup, WidgetWithHeader
 from .GUI import Utils as GuiUtils
 
-from .GUI.MayaMainWindow import setWidgetAsMayaMainWindow
+from .GUI import PanelWidget
 
 from PySide2.QtCore import * 
 from PySide2.QtGui import * 
@@ -130,12 +130,9 @@ class BoundingBoxStateWidget(QWidget):
         
 
 
-class LocationByBoundingBox(QWidget):
+class LocationByBoundingBox(PanelWidget.PanelWidget):
     def __init__(self, parent=None, *args, **kwargs):
         super(LocationByBoundingBox, self).__init__(*args, **kwargs)
-        if parent is None:
-            setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
-
         # self.setGeometry(50, 50, 250, 150)
         
         self.vbox = QVBoxLayout(self)
@@ -228,9 +225,8 @@ def createWidget(obj):
 
 
 def show():
-    print("\n==== Start", WIDGET_TITLE_NAME, "=====\n")
     ui = LocationByBoundingBox()
-    ui.show()
+    ui.showWindow()
     return ui
     
 if __name__ == '__main__':

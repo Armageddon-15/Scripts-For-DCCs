@@ -1,10 +1,8 @@
-
 from .Translate import TranslatorManager
 from .GUI import Utils as GuiUtils
+from .GUI import PanelWidget
 
 from . import NamingFunction
-
-from .GUI.MayaMainWindow import setWidgetAsMayaMainWindow
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
@@ -15,12 +13,9 @@ PRIORITY = 4
 WIDGET_TITLE_NAME = "Naming"
 WIDGET_OBJECT_NAME = "Naming"
 
-class Naming(QWidget):
+class Naming(PanelWidget.PanelWidget):
     def __init__(self, parent=None, *args, **kwargs):
-        super().__init__(parent, *args, **kwargs)
-
-        if parent is None:
-            setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
+        super().__init__(parent, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME, *args, **kwargs)
 
         self.chain_rename_check = GuiUtils.addWidget(self, QCheckBox)
         TranslatorManager.getTranslator().addTranslate(self.chain_rename_check.setText, "start from 1")
@@ -49,7 +44,6 @@ def createWidget(obj):
 
 
 def show():
-    print("\n==== Start", WIDGET_TITLE_NAME, "=====\n")
     ui = Naming()
-    ui.show()
+    ui.showWindow()
     return ui
