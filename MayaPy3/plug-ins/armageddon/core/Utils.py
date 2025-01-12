@@ -40,6 +40,15 @@ def uniqueList(l):
             
     return new_list
 
+def uniqueListUnhash(l):
+    new_list = []
+
+    for item in l:
+        if item not in new_list:
+            new_list.append(item)
+
+    return new_list
+
 
 def appendToListIfUnique(l, item):
     if not item in l:

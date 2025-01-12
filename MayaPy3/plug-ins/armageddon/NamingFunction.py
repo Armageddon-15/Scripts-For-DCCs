@@ -5,7 +5,7 @@ import pymel.core as core
 
 
 def chainRename(start_index = 1):
-    sel = SelectUtils.orderedSeclect()
+    sel = SelectUtils.orderedSelect()
     for obj in sel:
         children = ObjTrans.getTransformAllChildren(obj, False)
 

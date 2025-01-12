@@ -8,7 +8,7 @@ import pymel.core.datatypes as pmdt
 
 
 def verticesAlignLine(max_trace_distance=10000):
-    sel = SelecUtils.orderedSeclect()
+    sel = SelecUtils.orderedSelect()
     vertices = Component.getVertexFromSelection(sel)
     edges = Component.getEdgeFromSelection(sel)
     if len(edges) > 0:
@@ -40,13 +40,10 @@ def verticesAlignFace(dir_state="closest", max_trace_distance=10000):
         pivot_rotate = core.manipPivot(q=True, o=True)[0]
         pivot_rotate = pmdt.EulerRotation(pivot_rotate, unit="degrees")
         print(pivot_rotate)
-        vector_dict = {"pivot_x": pmdt.Vector([1,0,0]),
-                       "pivot_y": pmdt.Vector([0,1,0]),
-                       "pivot_z": pmdt.Vector([0,0,1])}
-        pivot_dir = vector_dict[dir_state]
+        pivot_dir = Component.AXIS_VECTOR_DICT[dir_state]
         align_dir = pivot_dir.rotateBy(pivot_rotate)
     
-    sel = SelecUtils.orderedSeclect()
+    sel = SelecUtils.orderedSelect()
     vertices = Component.getVertexFromSelection(sel)
     faces = Component.getFaceFromSelection(sel)
     if len(faces) > 0:

@@ -4,6 +4,7 @@ import pymel.core as core
 import pymel.core.datatypes as pmdt
 import pymel.core.nodetypes as pmnt
 
+from typing import Union
 
 def checkedSelect(*args, **kwargs):
     list_select = []
@@ -14,7 +15,7 @@ def checkedSelect(*args, **kwargs):
         return []
     
     
-def orderedSeclect(*args, **kwargs):
+def orderedSelect(*args, **kwargs):
     if core.selectPref(tso=True, q=True) == 0:
         core.selectPref(trackSelectionOrder=True)
     return checkedSelect(orderedSelection=True, *args, **kwargs)
@@ -61,7 +62,7 @@ def keepTopMostSelectedTransform(selection):
     return list(selected_top_parent_set)
 
 
-def select(sel):
+def select(sel: Union[list, any]):
     name_list = []
     if type(sel) is list:
         for obj in sel:

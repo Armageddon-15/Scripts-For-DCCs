@@ -12,14 +12,13 @@ import pymel.core.datatypes as pmdt
 
 import random
 
-
 def getRealPivotRotation():
     vaild_pivot_rot = core.manipPivot(q=True, oriValid=True)
     if vaild_pivot_rot:
         current_pivot_rot = core.manipPivot(q=True, o=True)[0]
         current_pivot_rot = pmdt.EulerRotation(current_pivot_rot, unit="degrees").asQuaternion()
     else:
-        obj = SelecUtils.orderedSeclect()[0]
+        obj = SelecUtils.orderedSelect()[0]
         current_pivot_rot = obj.getRotation(space="world", quaternion=True)
     return current_pivot_rot
 
@@ -34,9 +33,9 @@ def __getInformationFromEdgeLoop(edge_loop, space="world"):
         
     for edge in edge_loop:
         vtx.extend(core.polyListComponentConversion(edge, fromEdge=True, toVertex=True))
-        
     vertices = core.ls(vtx, flatten=True)
-    vertices = Utils.uniqueList(vertices)
+    # component is unhashable in py3 pymel
+    vertices = Utils.uniqueListUnhash(vertices)
     for vert in vertices:
         pos.append(pmdt.Vector(vert.getPosition(space)))
     
@@ -114,10 +113,10 @@ def pivotAlignmentMainAxis(axis_key="pivot_y", func_method="max", set_trans=True
     func_method can be: 
         max: transform mode, search the largest hole, 
         min: transform mode, search the smallest hole, 
-        select_loop: component mode, use selected edge loop to align the tranform pivot dir, 
+        selected_loop: component mode, use selected edge loop to align the tranform pivot dir,
         ignore: componet mode, but just for modeling
     """
-    sel = SelecUtils.orderedSeclect()
+    sel = SelecUtils.orderedSelect()
     certain_axis = Component.AXIS_VECTOR_DICT[axis_key]
     
     with core.UndoChunk("align primary pivot axis to edge loop"):
@@ -138,28 +137,30 @@ def pivotAlignmentMainAxis(axis_key="pivot_y", func_method="max", set_trans=True
             method_dict = {"max": max, "min": min}
             if func_method in method_dict:
                 for obj in sel:
+                    SelecUtils.select(obj)
                     alignPivotToCertainTrans(obj, certain_axis, method_dict[func_method], set_trans, set_ori, space)
                     if bake and len(sel) > 1:
-                        SelecUtils.select(obj)
-                        bakePivot()  
+                        bakePivot()
                 return None
             raise TypeError("method should be max or min")
         
         
-def pivotAlignmentSecondaryAxis(axis_key="pivot_x", secondary_axis="pivot_x", main_axis="pivot_y", custom_pos=[0,0,0]):
+def pivotAlignmentSecondaryAxis(axis_key="world_x", secondary_axis="pivot_x", main_axis="pivot_y", custom_pos=[0,0,0]):
     """
     axis_key can be:
         pivot_x, pivot_y, pivot_z,
         custom_pos: use input: custom_pos
         ignore: do nothing
     """
+    # if axis_key in {"world_x", "world_y", "world_z"}:
+    axis_key.replace("world", "pivot")
     if axis_key == "ignore":
         return None
     if axis_key in Component.AXIS_VECTOR_DICT:
         focus_dir = Component.AXIS_VECTOR_DICT[axis_key]
     else:
         aim_pos = pmdt.Vector(custom_pos)
-        sel = SelecUtils.orderedSeclect()[0]
+        sel = SelecUtils.orderedSelect()[0]
         if type(sel) is pmnt.Transform:
             pivot_pos = ObjTrans.getPivotPosInWorldSpace(sel)
         else:
@@ -180,7 +181,7 @@ def bakePivot():
 def zeroRotation():
 
     with core.UndoChunk("zero all transform rotation"):
-        sel = SelecUtils.orderedSeclect()
+        sel = SelecUtils.orderedSelect()
         for obj in sel:
             if not type(obj) is pmnt.Transform:
                 return None
@@ -202,7 +203,7 @@ def invertPivotAxis(first_axis="pivot_y", second_axis="pivot_x"):
 
 
 def invertPivotsAxis(first_axis="pivot_y", second_axis="pivot_x"):
-    sel = SelecUtils.orderedSeclect()
+    sel = SelecUtils.orderedSelect()
     for obj in sel:
         invertPivotAxis(obj, first_axis, second_axis)
            
@@ -210,7 +211,7 @@ def invertPivotsAxis(first_axis="pivot_y", second_axis="pivot_x"):
 def getCurrentSelectionPositon(space="world"):
     def theFunc():
         try:
-            sel = SelecUtils.orderedSeclect()[0]
+            sel = SelecUtils.orderedSelect()[0]
         except IndexError:
             return pmdt.Vector(0, 0, 0) 
         # print(type(sel), sel)

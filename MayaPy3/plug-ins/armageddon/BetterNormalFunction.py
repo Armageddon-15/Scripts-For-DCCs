@@ -104,8 +104,8 @@ class BetterNormalBackend:
     def releaseSelection(self):
         self.sel = None        
         
-    def betterNormalExcute(self, threshold = 0.01, area_weight = 1, distance_weight = 1, 
-                           size_scale = 1, space=om2.MSpace.kObject):
+    def betterNormalExecute(self, threshold = 0.01, area_weight = 1, distance_weight = 1,
+                            size_scale = 1, space=om2.MSpace.kObject):
         if not self.sel is None and self.sel.length() > 0:
             for i in range(self.sel.length()):
                 shape_path, comp = self.sel.getComponent(i)
@@ -141,7 +141,7 @@ def betterNormalExecuteOnce(threshold = 0.01, area_weight = 1, distance_weight =
             
 def betterNormalLiveUpdate(threshold = 0.01, area_weight = 1, distance_weight = 1, 
                             size_scale = 1, space=om2.MSpace.kObject):
-    _bnb.betterNormalExcute(threshold, area_weight, distance_weight, size_scale, space)            
+    _bnb.betterNormalExecute(threshold, area_weight, distance_weight, size_scale, space)
     
     
 def betterNormal(threshold = 0.01, area_weight = 1, distance_weight = 1, 

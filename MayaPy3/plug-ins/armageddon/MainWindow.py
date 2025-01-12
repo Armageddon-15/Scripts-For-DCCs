@@ -1,7 +1,7 @@
 from . import Parameters
 
-# from . import LocationByBoundingBox, Modeling, PivotAlignment, BakePreparation
 from .GUI import CollapsibleWidget
+from .Translate import TranslatorManager
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 
 from .GUI.MayaMainWindow import *
@@ -11,7 +11,6 @@ from PySide2.QtWidgets import *
 
 import os
 import importlib
-import sys
 
 if not "main_ui" in globals():
     main_ui = None
@@ -34,7 +33,9 @@ class ItemWidget(QWidget):
         for mod in modules:
             widget = mod.createWidget(self)
             self.widgets.append(widget)
-            self.panel_list.append(CollapsibleWidget.CollapsibleHeader(self, mod.WIDGET_TITLE_NAME, widget))
+            c_widget = CollapsibleWidget.CollapsibleHeader(self, mod.WIDGET_TITLE_NAME, widget)
+            TranslatorManager.getTranslator().addTranslate(c_widget.header.setText, mod.WIDGET_TITLE_NAME)
+            self.panel_list.append(c_widget)
 
         self.tab_widget = QTabWidget(self)
         self.tab_widget.setMovable(True)
@@ -66,6 +67,7 @@ class ItemWidget(QWidget):
             box.removeWidget(box.itemAt(i).widget())
 
     def switchToTab(self):
+        self.tab_widget.clear()
         self.removeBoxItems(self.scroll_vbox)
         for panel in self.panel_list:
             self.tab_widget.addTab(panel, panel.getHeaderName())
@@ -80,6 +82,7 @@ class ItemWidget(QWidget):
 
     def switchToScroll(self):
         self.tab_widget.clear()
+        self.removeBoxItems(self.scroll_vbox)
 
         self.tab_widget.hide()
         self.scroll_area.show()
@@ -103,16 +106,29 @@ class MainWindow(MayaQWidgetDockableMixin, QMainWindow):
 
 
         self.addSettingsMenu()
+        self.addLanguageMenu()
 
         self.item_widget = ItemWidget(self)
         self.setCentralWidget(self.item_widget)
 
 
     def addSettingsMenu(self):
-        settings = self.menuBar().addMenu("Settings")
-        switch_action = QAction("Switch Layout", self)
+        setting_menu = QMenu(self)
+        TranslatorManager.getTranslator().addTranslate(setting_menu.setTitle, "Settings")
+        self.menuBar().addMenu(setting_menu)
+        switch_action = QAction(self)
+        TranslatorManager.getTranslator().addTranslate(switch_action.setText, "Switch Layout")
         switch_action.triggered.connect(self.switchLayout)
-        settings.addAction(switch_action)
+        setting_menu.addAction(switch_action)
+
+    def addLanguageMenu(self):
+        setting_menu = QMenu(self)
+        TranslatorManager.getTranslator().addTranslate(setting_menu.setTitle, "Language")
+        self.menuBar().addMenu(setting_menu)
+        switch_action = QAction(self)
+        TranslatorManager.getTranslator().addTranslate(switch_action.setText, "Switch Language")
+        switch_action.triggered.connect(self.switchLanguage)
+        setting_menu.addAction(switch_action)
 
 
     def switchLayout(self):
@@ -120,6 +136,15 @@ class MainWindow(MayaQWidgetDockableMixin, QMainWindow):
             self.item_widget.switchToTab()
         elif self.item_widget.current_layout == 1:
             self.item_widget.switchToScroll()
+
+    def switchLanguage(self):
+        TranslatorManager.switchLanguage()
+        if self.item_widget.current_layout == 1:
+            self.item_widget.switchToTab()
+
+
+    def destroyed(self, *args, **kwargs):
+        print("hi")
 
 
 
@@ -136,14 +161,14 @@ def packageCheck():
         module_name = filename
         if not os.path.exists(os.path.join(current_dir, module_name + "Function.py")):
             continue
-        print(f"Trying to import {module_name}")
+        # print(f"Trying to import {module_name}")
         try:
             mod = importlib.import_module("." + module_name, package=root_pack)
             modules.append(mod)
         except Exception as e:
             print(f"Failed to import {module_name}: {e}")
             continue
-        print(f"import {module_name} successfully")
+        # print(f"import {module_name} successfully")
 
         try:
             priority = mod.PRIORITY
@@ -165,8 +190,10 @@ def packageCheck():
 
 def DockableWidgetUIScript():
     global main_ui
+    TranslatorManager.resetTranslator()
     main_ui = MainWindow(getMayaMainWindow())
     main_ui.show(dockable=True)
+    main_ui.switchLayout()
     return main_ui
 
 
@@ -174,14 +201,6 @@ def show():
     print("\n====Start Armageddon Main Window=====\n")
     ui = DockableWidgetUIScript()
     return ui
-
-
-def switchToTab():
-    main_ui.switchToTab()
-
-
-def switchToScroll():
-    main_ui.switchToScroll()
 
 
 if __name__ == '__main__':

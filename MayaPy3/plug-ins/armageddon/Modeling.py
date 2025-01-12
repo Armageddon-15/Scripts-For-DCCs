@@ -1,7 +1,9 @@
 # -*- coding: UTF-8 -*-
 
-from .GUI import Separator, WidgetWithHeader, WidgetWithName
+from .GUI import WidgetWithHeader, WidgetWithName
 from .GUI import Utils as GuiUtils
+
+from .Translate import TranslatorManager
 
 from . import ModelingFunction
 from . import BetterNormalFunction
@@ -24,38 +26,35 @@ class AlignmentWidget(QWidget):
         if parent is None:
             setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
         
-        self.align_header = WidgetWithHeader.WidgetWithHeader(self, "Alignment")
+        self.align_header = WidgetWithHeader.WidgetWithHeader(self)
+        TranslatorManager.getTranslator().addTranslate(self.align_header.header.setText, "Alignment")
         
-        self.max_length = WidgetWithName.SpinBox(self, "Max Trace Length:")
+        self.max_length = WidgetWithName.SpinBox(self)
+        TranslatorManager.getTranslator().addTranslate(self.max_length.getNameWidget().setText, "Max Trace Length:")
         self.max_length.setMaxValue(9999999)
         self.max_length.setValue(100000)
         
-        self.point_align_line_btn = GuiUtils.addButton(self, "Point Align Line",
-                                                       "将一些点对齐到一条线上，只能使用最近距离\n"
-                                                       "操作如下：\n"
-                                                       "1.选定一些点，其中前两个点为确定线段的点\n"
-                                                       "  其余点为需要移动的点\n"
-                                                       "2.或者使用多组件选择，无关顺序，所选的第一条\n"
-                                                       "  边为对齐边，其余点为需要用到的点")
+        self.point_align_line_btn = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.point_align_line_btn.setText, "Point Align Line")
+        TranslatorManager.getTranslator().addTranslate(self.point_align_line_btn.setToolTip, "M_AW_PAL_Btn_Tip")
         self.point_align_line_btn.clicked.connect(self.pointAlignLine)        
         
-        self.face_align_combo_box = WidgetWithName.ComboBox(self, "Face Align Director:")
-        self.face_align_combo_box.setComboBoxToolTip("Hi")
+        self.face_align_combo_box = WidgetWithName.ComboBox(self)
+        TranslatorManager.getTranslator().addTranslate(self.face_align_combo_box.getNameWidget().setText, "Face Align Direction:")
+        TranslatorManager.getTranslator().addTranslate(self.face_align_combo_box.getNameWidget().setToolTip, "M_AW_FACB_Tip")
         self.face_align_combo_box.addItem("Closest", "closest")
         self.face_align_combo_box.addItem("Normal", "normal")  
         self.face_align_combo_box.addItem("Pivot X", "pivot_x")
         self.face_align_combo_box.addItem("Pivot Y", "pivot_y")
         self.face_align_combo_box.addItem("Pivot Z", "pivot_z")
+
+        TranslatorManager.getTranslator().addItemTranslate(self.face_align_combo_box.getRightWidget())
         
-        self.point_align_face_btn = GuiUtils.addButton(self, "Point Align Face",
-                                                   "将一些点对齐到一个平面上，根据上面的选单调整位置\n"
-                                                   "操作如下：\n"
-                                                   "1.选定一些点，其中前三个点为确定线段的点\n"
-                                                   "  其余点为需要移动的点\n"
-                                                   "2.或者使用多组件选择，无关顺序，所选的第一个\n"
-                                                   "  面为对齐平面，其余点为需要用到的点")
+        self.point_align_face_btn = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.point_align_face_btn.setText, "Point Align Face")
+        TranslatorManager.getTranslator().addTranslate(self.point_align_face_btn.setToolTip, "M_AW_PAF_Btn_Tip")
         
-        self.point_align_face_btn.clicked.connect(self.pointAlingFace)
+        self.point_align_face_btn.clicked.connect(self.pointAlignFace)
         
         self.align_header.addWidget(self.max_length)
         self.align_header.addWidget(self.point_align_line_btn)
@@ -70,7 +69,7 @@ class AlignmentWidget(QWidget):
     def pointAlignLine(self):
         ModelingFunction.verticesAlignLine()
         
-    def pointAlingFace(self):
+    def pointAlignFace(self):
         ModelingFunction.verticesAlignFace(self.face_align_combo_box.getCurrentActiveData(), 
                                            self.max_length.getValue())
      
@@ -84,31 +83,38 @@ class BetterNormal(QWidget):
             setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
             
         
-        self.header = WidgetWithHeader.WidgetWithHeader(self, "Better Normal")
+        self.header = WidgetWithHeader.WidgetWithHeader(self)
+        TranslatorManager.getTranslator().addTranslate(self.header.header.setText, "Better Normal")
         
-        self.area_weight = WidgetWithName.ViewerSlider(self, "Area Weight")
+        self.area_weight = WidgetWithName.ViewerSlider(self)
+        TranslatorManager.getTranslator().addTranslate(self.area_weight.getNameWidget().setText, "Area Weight")
         self.area_weight.setValue(1)
         self.area_weight.setMaximumValue(20)
         self.area_weight.valueChanged.connect(self.liveUpdateBetterNormal)
-        self.distance_weight = WidgetWithName.ViewerSlider(self, "Distance Weight")
+        self.distance_weight = WidgetWithName.ViewerSlider(self)
+        TranslatorManager.getTranslator().addTranslate(self.distance_weight.getNameWidget().setText, "Distance Weight")
         self.distance_weight.setValue(1)
         self.distance_weight.setMaximumValue(20)
         self.distance_weight.valueChanged.connect(self.liveUpdateBetterNormal)
-        self.size_scale = WidgetWithName.ViewerSlider(self, "Size Scale")
+        self.size_scale = WidgetWithName.ViewerSlider(self)
+        TranslatorManager.getTranslator().addTranslate(self.size_scale.getNameWidget().setText, "Size Scale")
         self.size_scale.setValue(1)
         self.size_scale.setPrecise(0.1)        
         self.size_scale.setMaximumValue(100)
         self.size_scale.valueChanged.connect(self.liveUpdateBetterNormal)
-        self.threshold = WidgetWithName.ViewerSlider(self, "Threshold")
+        self.threshold = WidgetWithName.ViewerSlider(self)
+        TranslatorManager.getTranslator().addTranslate(self.threshold.getNameWidget().setText, "Threshold")
         self.threshold.setPrecise(0.01)
         self.threshold.setMaximumValue(1)
         self.threshold.setMinimumValue(0)
         self.threshold.valueChanged.connect(self.liveUpdateBetterNormal)
-        self.live_update_checkbox = GuiUtils.addWidget(self, QCheckBox, "Live Update", "")
+        self.live_update_checkbox = GuiUtils.addWidget(self, QCheckBox)
+        TranslatorManager.getTranslator().addTranslate(self.live_update_checkbox.setText, "Live Update")
         self.live_update_checkbox.toggled.connect(self.liveUpdateToggle)
         
-        self.apply_btn = GuiUtils.addButton(self, "Apply")
-        self.apply_btn.clicked.connect(self.betterNormalExcute)
+        self.apply_btn = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.apply_btn.setText, "Apply")
+        self.apply_btn.clicked.connect(self.betterNormalExecute)
         
         self.header.addWidget(self.area_weight)
         self.header.addWidget(self.distance_weight)
@@ -135,7 +141,7 @@ class BetterNormal(QWidget):
             
             BetterNormalFunction.betterNormalLiveUpdate(thres, area, dist, size)
         
-    def betterNormalExcute(self):
+    def betterNormalExecute(self):
         area, dist = self.area_weight.getSliderValue(), self.distance_weight.getSliderValue()
         size, thres = self.size_scale.getSliderValue(), self.threshold.getSliderValue()
         BetterNormalFunction.betterNormalExecuteOnce(thres, area, dist, size)  
@@ -169,6 +175,7 @@ class Modeling(QWidget):
         
         self.vbox.addWidget(self.alignment_widget)
         self.vbox.addWidget(self.better_normal_widget)
+
 
 
 

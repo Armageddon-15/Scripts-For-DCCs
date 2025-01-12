@@ -1,4 +1,5 @@
-from .GUI import Separator, WidgetWithHeader, WidgetWithName, VectorVis
+
+from .Translate import TranslatorManager
 from .GUI import Utils as GuiUtils
 
 from . import NamingFunction
@@ -21,10 +22,13 @@ class Naming(QWidget):
         if parent is None:
             setWidgetAsMayaMainWindow(self, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME)
 
-        self.chain_rename_check = GuiUtils.addWidget(self, QCheckBox, "start from 1", "后缀从1开始")
+        self.chain_rename_check = GuiUtils.addWidget(self, QCheckBox)
+        TranslatorManager.getTranslator().addTranslate(self.chain_rename_check.setText, "start from 1")
+        TranslatorManager.getTranslator().addTranslate(self.chain_rename_check.setToolTip, "N_N_CRC_Tip")
         self.chain_rename_check.setChecked(True)
 
-        self.chain_rename_button = GuiUtils.addButton(self, "Rename")
+        self.chain_rename_button = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.chain_rename_button.setText, "Add Serial Number Suffix")
         self.chain_rename_button.clicked.connect(self.chainRename)
 
 

@@ -4,7 +4,6 @@ import pymel.core as core
 import pymel.core.nodetypes as pmnt
 import pymel.core.datatypes as pmdt 
 
-
 def getShapeTransforms(shape):
     return core.listRelatives(shape, parent=True)
 
@@ -44,7 +43,7 @@ def getPivotPosInWorldSpace(transform):
     return pmdt.Vector(core.xform(transform, q=True, piv=True, ws=True)[:3])
 
 
-def getComponetsTransforms(shape):
+def getComponentsTransforms(shape):
     c = Utils.uniqueList(shape)
     return getShapeTransforms(c)
 
@@ -61,9 +60,9 @@ def getTransformPivot(transform, world_space=True):
     return transform.getPivots(worldSpace=world_space)[0]
 
 
-def setPivotPosition(obj, posiiton, if_world_space=True):
+def setPivotPosition(obj, position, if_world_space=True):
     if type(obj) is pmnt.Transform:    
-        core.xform(obj, pivots=posiiton, worldSpace=if_world_space)
+        core.xform(obj, pivots=position, worldSpace=if_world_space)
         
 
 def getPivotPosition(obj, if_world_space=True):
@@ -73,7 +72,7 @@ def getPivotPosition(obj, if_world_space=True):
     return pmdt.Point()
 
 
-def getSingleTransformBoundingBox(transform=pmnt.Transform(), actual_size=True, 
+def getSingleTransformBoundingBox(transform:pmnt.Transform, actual_size=True,
                                   exclude_children=False, space="world"):
     if type(transform) is pmnt.Transform:
         if not exclude_children:
@@ -116,9 +115,11 @@ def largestBoundingBoxOfBoundingBoxes(bboxes):
         box_max.y = max(bbox_max.y, box_max.y)
         box_max.z = max(bbox_max.z, box_max.z)
         
-    return pmdt.BoundingBox(box_min, box_max)        
-    
-    
+    return pmdt.BoundingBox(box_min, box_max)
+
+
+
+
 def getAllTransformsBoundingBox(transforms, actual_size=True, exclude_children=False, space="world"):
     bboxes = []
     
@@ -149,6 +150,7 @@ def getTransformShapesBoundingBox(transform):
     return pmdt.BoundingBox()
             
 
+
 def visualizeBoundingBox(bbox, name="BoundingBoxVis"):
     with core.UndoChunk("create visual bounding box"):
         vis_cube = core.polyCube(d=max(0.0001, bbox.depth()), 
@@ -178,7 +180,7 @@ def getBoundingBoxCertainAxisPosition(bbox, axis, state):
     return None
 
 
-def bboxCertainPostionByState(bbox, states, current_pivot_position=pmdt.Point()):
+def bboxCertainPositionByState(bbox, states, current_pivot_position=pmdt.Point()):
     if type(bbox) is pmdt.BoundingBox:
         bbox_list = bbox.__melobject__()
     elif type(bbox) is list:
@@ -198,5 +200,3 @@ def bboxCertainPostionByState(bbox, states, current_pivot_position=pmdt.Point())
         i += 1
         
     return pmdt.Point(new_pivot_pos)
-
-

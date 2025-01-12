@@ -2,6 +2,7 @@
 from . import Parameters
 from . import LocationByBoundingBoxFunction as Func
 
+from .Translate import TranslatorManager
 from .GUI import Separator, RadioGroup, WidgetWithHeader
 from .GUI import Utils as GuiUtils
 
@@ -31,15 +32,15 @@ class BoundingBoxStateWidget(QWidget):
         
         self.actual_size_check = QCheckBox(self)
         self.actual_size_check.setCheckState(Qt.Checked)
-        self.actual_size_check.setText("Actual Size")
-        self.actual_size_check.setToolTip("transform的bbox是变换后的shape的bbox的bbox，"
-                                          "基本没有实际意义，所以默认勾选")
+        TranslatorManager.getTranslator().addTranslate(self.actual_size_check.setText, "Actual Size")
+        TranslatorManager.getTranslator().addTranslate(self.actual_size_check.setToolTip, "TABX_BBSW_ASC_Tip")
         self.exclude_children = QCheckBox(self)
-        self.exclude_children.setText("Only Selected")
-        self.exclude_children.setToolTip("勾选时bbox不包括子集")
+        TranslatorManager.getTranslator().addTranslate(self.exclude_children.setText, "Only Selected")
+        TranslatorManager.getTranslator().addTranslate(self.exclude_children.setToolTip, "TABX_BBSW_EXS_Tip")
+        ()
         self.one_large_bbox = QCheckBox(self)
-        self.one_large_bbox.setText("One Large BBox")
-        self.one_large_bbox.setToolTip("勾选时将所选所有物体看成一个整体")     
+        TranslatorManager.getTranslator().addTranslate(self.one_large_bbox.setText, "One Large BBox")
+        TranslatorManager.getTranslator().addTranslate(self.one_large_bbox.setToolTip, "TABX_BBSW_OLB_Tip")
            
         self.check_box_frame = QFrame(self)
         self.frame_hbox = QHBoxLayout(self.check_box_frame)
@@ -49,12 +50,14 @@ class BoundingBoxStateWidget(QWidget):
         self.frame_hbox.addWidget(self.exclude_children)
         self.frame_hbox.addWidget(self.one_large_bbox)        
      
-        self.inspect_bbox_setting = GuiUtils.addButton(self, "Inspect Settings",
-                                                       "检查数据，debug用")
+        self.inspect_bbox_setting = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.inspect_bbox_setting.setText, "Inspect Settings")
+        TranslatorManager.getTranslator().addTranslate(self.inspect_bbox_setting.setToolTip, "TABX_BBSW_IBS_Btn_Tip")
         self.inspect_bbox_setting.clicked.connect(self.inspectBBoxSetting)
         
-        self.vis_bbox = GuiUtils.addButton(self, "看看你的",
-                                           "生成所选取物体的bbox，一个立方体")
+        self.vis_bbox = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.vis_bbox.setText, "Check BBox")
+        TranslatorManager.getTranslator().addTranslate(self.vis_bbox.setToolTip, "TABX_BBSW_VB_Tip")
         self.vis_bbox.clicked.connect(self.visualizeBBox)
         
         self.vbox.addWidget(self.check_box_frame)        
@@ -62,9 +65,12 @@ class BoundingBoxStateWidget(QWidget):
         self.vbox.addWidget(self.vis_bbox)
 
     def __addRadioBtn(self):
-        x_radio_group = RadioGroup.RadioGroup(self, "X-aixs:")
-        y_radio_group = RadioGroup.RadioGroup(self, "Y-aixs:")
-        z_radio_group = RadioGroup.RadioGroup(self, "Z-aixs:")
+        x_radio_group = RadioGroup.RadioGroup(self)
+        TranslatorManager.getTranslator().addTranslate(x_radio_group.setTitleText, "x-axis")
+        y_radio_group = RadioGroup.RadioGroup(self)
+        TranslatorManager.getTranslator().addTranslate(y_radio_group.setTitleText, "y-axis")
+        z_radio_group = RadioGroup.RadioGroup(self)
+        TranslatorManager.getTranslator().addTranslate(z_radio_group.setTitleText, "z-axis")
         
         x_radio_group.addRadioBtn("Min")
         x_radio_group.addRadioBtn("Mid")
@@ -137,28 +143,27 @@ class LocationByBoundingBox(QWidget):
         self.vbox.setSpacing(1)
         self.vbox.setAlignment(Qt.AlignTop)
         
-        self.bbox_settings_widget = WidgetWithHeader.WidgetWithHeader(self, "Bounding Box Settings:")
+        self.bbox_settings_widget = WidgetWithHeader.WidgetWithHeader(self)
+        TranslatorManager.getTranslator().addTranslate(self.bbox_settings_widget.header.setText, "Bounding Box Settings:")
         self.bbox_settings = BoundingBoxStateWidget(self)
         self.bbox_settings_widget.addWidget(self.bbox_settings)
 
         self.separator = Separator.Separator(self, 20)
         
-        self.move_settings_widget = WidgetWithHeader.WidgetWithHeader(self, "Moving:")
+        self.move_settings_widget = WidgetWithHeader.WidgetWithHeader(self)
+        TranslatorManager.getTranslator().addTranslate(self.move_settings_widget.header.setText, "Moving:")
         
-        self.move_exclude_children = GuiUtils.addWidget(self, QCheckBox,
-                                                        "Exclude Children", 
-                                                        "勾选时移动将不包括子集")
-                       
-        self.move_to_world_center_by_group_bbox = GuiUtils.addButton(self, "Move To World Center By BBox",
-                                                                 "根据bbox选项移动到对应位置\n"
-                                                                    "要注意only selected 和 exclude children 勾选情况，\n"
-                                                                    "不一致时移动可能并非预想情况\n"
-                                                                    "勾选one large bbox时所选物体将会根据整体的bbox移动相同的距离\n"
-                                                                    "不勾选时则每个选择的物体都会根据自己的bbox移动")
+        self.move_exclude_children = GuiUtils.addWidget(self, QCheckBox)
+        TranslatorManager.getTranslator().addTranslate(self.move_exclude_children.setText, "Exclude Children")
+        TranslatorManager.getTranslator().addTranslate(self.move_exclude_children.setToolTip, "TABX_LBBB_MEC_Tip")
+
+        self.move_to_world_center_by_group_bbox = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.move_to_world_center_by_group_bbox.setText, "Move To World Center By BBox")
+        TranslatorManager.getTranslator().addTranslate(self.move_to_world_center_by_group_bbox.setToolTip, "TABX_LBBB_MWCBGB_Tip")
         self.move_to_world_center_by_group_bbox.clicked.connect(self.moveToWorldCenterByGroupBBox)
 
-        self.set_pivot_by_bbox = GuiUtils.addButton(self, "Move Pivot By BBox",
-                                                    "根据bbox选项移动枢轴")
+        self.set_pivot_by_bbox = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.set_pivot_by_bbox.setText, "Move Pivot By BBox")
         self.set_pivot_by_bbox.clicked.connect(self.setPivotByBBox)
         
         self.keep_pivot_offset = GuiUtils.addWidget(self, QCheckBox,
@@ -166,15 +171,19 @@ class LocationByBoundingBox(QWidget):
                                                     "移动后保持枢轴对物体的相对位置，\n"
                                                     "仅对此选项之后的操作有用,\n"
                                                     "一般第一个不勾选，第二个勾选")
+        TranslatorManager.getTranslator().addTranslate(self.keep_pivot_offset.setText, "Keep Pivot Offset")
+        TranslatorManager.getTranslator().addTranslate(self.keep_pivot_offset.setToolTip, "TABX_LBBB_KPO_Tip")
         
         self.move_to_pivot_by_bbox = GuiUtils.addButton(self, "Move To Pivot By BBox",
-                                                        "根据bbox选项移动物体到枢轴所在位置，\n"
-                                                        "只能根据每个物体的bbox操作，\n"
-                                                        "所以one larget bbox对这个选项没用")
+                                                        "TABX_LBBB_MTPBB_Tip")
+        TranslatorManager.getTranslator().addTranslate(self.move_to_pivot_by_bbox.setText, "Move To Pivot By BBox")
+        TranslatorManager.getTranslator().addTranslate(self.move_to_pivot_by_bbox.setToolTip, "TABX_LBBB_MTPBB_Tip")
         self.move_to_pivot_by_bbox.clicked.connect(self.moveToPivotByBBox) 
         
         self.move_to_world_center_by_pivot = GuiUtils.addButton(self, "Move To World Center By Pivot",
-                                                                "和bbox无关，根据枢轴位置移动到世界坐标中心") 
+                                                                "和bbox无关，根据枢轴位置移动到世界坐标中心")
+        TranslatorManager.getTranslator().addTranslate(self.move_to_world_center_by_pivot.setText, "Move To World Center By Pivot")
+        TranslatorManager.getTranslator().addTranslate(self.move_to_world_center_by_pivot.setToolTip, "TABX_LBBB_MTPBB_Tip")
         self.move_to_world_center_by_pivot.clicked.connect(self.moveToWorldCenterByPivot)
               
         self.move_settings_widget.addWidget(self.move_exclude_children)

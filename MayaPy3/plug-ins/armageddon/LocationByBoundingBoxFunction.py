@@ -23,7 +23,7 @@ def __excludeChildrenReturnLocation(selected_obj, children_obj, parent_sel, offs
 
 def __getBBoxAimPosition(o, states, actual_size, bbox_exclude_children):
     bbox = ObjTrans.getSingleTransformBoundingBox(o, actual_size, bbox_exclude_children)
-    aim_pos = ObjTrans.bboxCertainPostionByState(bbox, states)
+    aim_pos = ObjTrans.bboxCertainPositionByState(bbox, states)
     return aim_pos
 
      
@@ -43,12 +43,12 @@ def __excludeChidrenTranslation(sel, root_group, move_exclude_children, translat
             
 def moveToWorldCenterByGroupBBox(states, move_exclude_children, actual_size=True, 
                                  bbox_exclude_children=False):
-    sel = SelectUtils.orderedSeclect()
+    sel = SelectUtils.orderedSelect()
     if len(sel) > 0:
         with core.UndoChunk("group move to world center"):        
             root_group = SelectUtils.keepTopMostSelectedTransform(sel)        
             bbox = ObjTrans.getAllTransformsBoundingBox(sel, actual_size, bbox_exclude_children)
-            aim_pos = ObjTrans.bboxCertainPostionByState(bbox, states, pmdt.Point([0,0,0]))
+            aim_pos = ObjTrans.bboxCertainPositionByState(bbox, states, pmdt.Point([0, 0, 0]))
             for obj in root_group:
                 obj.translateBy(-pmdt.Vector(aim_pos), space="world")
                 if move_exclude_children:
@@ -66,7 +66,7 @@ def eachMoveToWorldCenterByEachBBox(states, move_exclude_children, actual_size=T
         aim_pos = __getBBoxAimPosition(o, states, actual_size, bbox_exclude_children)
         o.translateBy(-pmdt.Vector(aim_pos), space="world")
     
-    sel = SelectUtils.orderedSeclect()
+    sel = SelectUtils.orderedSelect()
     if len(sel) > 0:
         with core.UndoChunk("each move to world center"):
             root_group = SelectUtils.keepTopMostSelectedTransform(sel)
@@ -76,7 +76,7 @@ def eachMoveToWorldCenterByEachBBox(states, move_exclude_children, actual_size=T
 
 def setPivotByBoundingBox(states, one_large_bbox=True, bbox_actual_size=True, 
                           bbox_exclude_children=False):
-    sel = SelectUtils.orderedSeclect()
+    sel = SelectUtils.orderedSelect()
     if len(sel) > 0:
         with core.UndoChunk("set pivot by bounding box"):        
             if one_large_bbox:
@@ -87,7 +87,7 @@ def setPivotByBoundingBox(states, one_large_bbox=True, bbox_actual_size=True,
                     bbox = ObjTrans.getSingleTransformBoundingBox(obj, bbox_actual_size, bbox_exclude_children)
                 
                 current_pivot_pos = ObjTrans.getPivotPosition(obj)
-                aim_pos = ObjTrans.bboxCertainPostionByState(bbox, states, current_pivot_pos)
+                aim_pos = ObjTrans.bboxCertainPositionByState(bbox, states, current_pivot_pos)
                 ObjTrans.setPivotPosition(obj, aim_pos)
             
             SelectUtils.select(sel)
@@ -101,7 +101,7 @@ def moveToWorldCenterByPivot(move_exclude_children, keep_pivot_offset=False):
         if not keep_pivot_offset:
             ObjTrans.setPivotPosition(o, pivot_pos)
     
-    sel = SelectUtils.orderedSeclect()
+    sel = SelectUtils.orderedSelect()
     if len(sel) > 0:
         root_group = SelectUtils.keepTopMostSelectedTransform(sel)
         with core.UndoChunk("translate to world center by pivot"):
@@ -119,7 +119,7 @@ def moveToPivotByBBox(states, move_exclude_children, keep_pivot_offset=False,
         offset = pmdt.Vector(pivot_pos) - pmdt.Vector(bbox_aim_pos)
         o.translateBy(offset, space="world")
 
-    sel = SelectUtils.orderedSeclect()
+    sel = SelectUtils.orderedSelect()
     if len(sel) > 0:
         root_group = SelectUtils.keepTopMostSelectedTransform(sel)
         with core.UndoChunk("move selected to pivot by bounding box"):
@@ -128,7 +128,7 @@ def moveToPivotByBBox(states, move_exclude_children, keep_pivot_offset=False,
 
 
 def visualizeSelectedBoundingBox(one_large_bbox=True, bbox_actual_size=True, bbox_exclude_children=False):
-    sel = SelectUtils.orderedSeclect()
+    sel = SelectUtils.orderedSelect()
     if len(sel) > 0:
         with core.UndoChunk("visualize selected bounding box"):
             if one_large_bbox:

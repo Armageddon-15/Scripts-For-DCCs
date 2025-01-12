@@ -12,7 +12,7 @@ import pymel.core.datatypes as pmdt
 
 
 def uniqueEachMaterial(include_children=False):
-    sel = SelectUtils.orderedSeclect()
+    sel = SelectUtils.orderedSelect()
     transforms = []
     for obj in sel:
         if include_children:
