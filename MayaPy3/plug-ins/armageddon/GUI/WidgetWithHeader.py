@@ -14,7 +14,7 @@ class WidgetWithHeader(QWidget):
         self.widget_block = QWidget(self)
         self.block_vbox = QVBoxLayout(self.widget_block)
         self.block_vbox.setContentsMargins(10, 0, 0, 0)
-        
+
         self.main_vbox = QVBoxLayout(self)
         self.main_vbox.setContentsMargins(0, 0, 0, 0)
         
@@ -23,7 +23,10 @@ class WidgetWithHeader(QWidget):
         
     def addWidget(self, obj):
         self.block_vbox.addWidget(obj)
-        
+
+    def addLayout(self, obj, stretch=1):
+        self.block_vbox.addLayout(obj, stretch=stretch)
+
     def setHeaderFont(self, font): 
         self.header.setFont(font)
         

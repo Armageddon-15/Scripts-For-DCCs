@@ -24,13 +24,17 @@ class TranslatorManager:
             return
         self.language = language
         for key in self.object_dict.keys():
-            # try:
+            try:
                 key(self.getTranslatedText(self.object_dict[key], language))
-            # except BaseException as e:
+            except BaseException as e:
+                pass
             #     print(e)
         for item_parent in self.item_parents:
             for i in range(item_parent.count()):
-                source_text = item_parent.itemData(i)
+                try:
+                    source_text = item_parent.itemData(i)
+                except BaseException as e:
+                    break
                 trans_text = self.getTranslatedText(source_text, language)
                 item_parent.setItemText(i, trans_text)
 

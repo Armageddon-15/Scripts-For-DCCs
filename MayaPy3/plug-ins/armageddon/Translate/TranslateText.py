@@ -20,6 +20,10 @@ TRANSLATE_TEXT = {
          "zh": "Z 枢轴"},
     "Apply":
         {"zh": "应用"},
+    "Get":
+        {"zh": "获取"},
+    "Searching Method:":
+        {"zh": "寻找方法："},
     # "":
     #     {"zh": ""},
     # ---- Title ----
@@ -186,6 +190,7 @@ TRANSLATE_TEXT = {
                "  其余点为需要移动的点\n"
                "2.或者使用多组件选择，无关顺序，所选的第一个\n"
                "  面为对齐平面，其余点为需要用到的点"},
+
     "Better Normal":
         {"zh": "更好的法线"},
     "Area Weight":
@@ -198,6 +203,45 @@ TRANSLATE_TEXT = {
         {"zh": "阈值"},
     "Live Update":
         {"zh": "实时更新"},
+
+    "ReSymmetry Vertices":
+        {"zh": "重对称顶点"},
+    "Symmetry Plane Position:":
+        {"zh": "对称平面位置："},
+    "Symmetry Plane Normal:":
+        {"zh": "对称平面法线："},
+    "M_SV_SSCB_Tip":
+        {"en": "Spacial: Select points based on the nearest symmetrical distance\n"
+               "Precise: Manually select an even number of points and match which points need to be symmetrical based on the next item\n"
+               "         Not recommended for frame selection",
+         "zh": "空间：根据对称的最近距离选择点\n"
+               "精确：手动选择偶数量的点，根据下一项匹配哪些为需要对称的点，不建议框选"},
+    "spacial":
+        {"en": "Spacial",
+         "zh": "空间"},
+    "precise":
+        {"en": "Precise",
+         "zh": "精确"},
+    "Precise Order:":
+        {"zh": "精确顺序："},
+    "M_SV_POCB_Tip":
+        {"en":"First half: The first half of the selected vertices are reference points, and the second half are points that need to be re symmetric\n"
+              "Every other: The first of every two points is a reference point, and the second is a resymmetric point",
+         "zh": "前一半：选择的顶点中前一半是参照点，后一半是要重新对称的点\n"
+               "每隔一个：每两个点中的前一个是参照点，后一个是重新对称的点"},
+    "first_half":
+        {"en": "First Half",
+         "zh": "前一半"},
+    "every_other":
+        {"en": "Every Other",
+         "zh": "每隔一个"},
+    "ReSymmetry":
+        {"zh": "重新对称"},
+    # "":
+    #     {"zh": ""},
+    # "":
+    #     {"en": "",
+    #      "zh": ""},
 
     # ---- Naming ----
     "start from 1":
@@ -218,8 +262,6 @@ TRANSLATE_TEXT = {
     "PA_BIM_Tip":
         {"en": "If the selected object is greater than 1, bake the pivot, otherwise the result may not be saved",
          "zh": "如果选择的物体大于1就烘焙枢轴，否则结果可能不会保存"},
-    "Searching Method:":
-        {"zh": "寻找方法："},
     "max":
         {"zh": "最大"},
     "min":
@@ -279,11 +321,11 @@ TRANSLATE_TEXT = {
     "Zero Rotation":
         {"zh": "旋转归零"},
 
-    "":
-        {"zh": ""},
-    "":
-        {"en": "",
-         "zh": ""},
+    # "":
+    #     {"zh": ""},
+    # "":
+    #     {"en": "",
+    #      "zh": ""},
     # "":
     #     {"zh": ""},
     "Repaint":

@@ -18,7 +18,7 @@ WIDGET_OBJECT_NAME = "pivot_align_tube"
 
 class PivotAlignment(PanelWidget.PanelWidget):
     def __init__(self, parent=None, *args, **kwargs):
-        super(PivotAlignment, self).__init__(parent, *args, **kwargs)
+        super(PivotAlignment, self).__init__(parent, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME, *args, **kwargs)
             
         self.check_widget = QFrame(self)
         self.check_hbox = QHBoxLayout(self.check_widget)
@@ -141,7 +141,7 @@ class PivotAlignment(PanelWidget.PanelWidget):
         PivotAlignmentFunction.bakePivot()
         
     def rememberSelectPoint(self):
-        vector = PivotAlignmentFunction.getCurrentSelectionPositon().get()
+        vector = PivotAlignmentFunction.getCurrentSelectionPosition().get()
         print(vector)
         self.position_vector_vis.setValue(list(vector))
         

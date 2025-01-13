@@ -1,12 +1,11 @@
 # -*- coding: UTF-8 -*-
 
-from .GUI import WidgetWithHeader, WidgetWithName
+from .GUI import WidgetWithHeader, WidgetWithName, VectorVis
 from .GUI import Utils as GuiUtils
 
 from .Translate import TranslatorManager
 
-from . import ModelingFunction
-from . import BetterNormalFunction
+from . import ModelingFunction, BetterNormalFunction, SymmetryVerticesFunction
 
 from .GUI import PanelWidget
 
@@ -149,14 +148,100 @@ class BetterNormal(QWidget):
         super(BetterNormal, self).destroy(*args, **kwargs)
         BetterNormalFunction.releaseBackendSelection()
 
-        
-        
+
+class SymmetryVertices(QWidget):
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+
+        self.header = WidgetWithHeader.WidgetWithHeader(self)
+        TranslatorManager.getTranslator().addTranslate(self.header.header.setText, "ReSymmetry Vertices")
+
+        self.pos_widget = QWidget(self)
+        self.position_vector_vis = VectorVis.Vector3SpinBox(self)
+        self.position_vector_vis.setMinMax(-0xfffffff, 0xfffffff)
+        self.position_vector_vis.setVisMinimumWidth(20)
+        self.position_vis = WidgetWithName.WidgetInstanceWithName(self.position_vector_vis, self)
+        TranslatorManager.getTranslator().addTranslate(self.position_vis.getNameWidget().setText, "Symmetry Plane Position:")
+        self.get_pos_btn = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.get_pos_btn.setText, "Get")
+        self.get_pos_btn.setMaximumWidth(50)
+        self.get_pos_btn.clicked.connect(self.getSelectedPosition)
+        self.pos_hbox = QHBoxLayout(self.pos_widget)
+        self.pos_hbox.setContentsMargins(0,0,0,0)
+        self.pos_hbox.addWidget(self.position_vis)
+        self.pos_hbox.addWidget(self.get_pos_btn)
+
+        self.normal_widget = QWidget(self)
+        self.normal_vector_vis = VectorVis.Vector3SpinBox(self)
+        self.normal_vector_vis.setMinMax(-0xfffffff, 0xfffffff)
+        self.normal_vector_vis.setVisMinimumWidth(20)
+        self.normal_vector_vis.setValue([1, 0, 0])
+        self.normal_vis = WidgetWithName.WidgetInstanceWithName(self.normal_vector_vis, self)
+        TranslatorManager.getTranslator().addTranslate(self.normal_vis.getNameWidget().setText, "Symmetry Plane Normal:")
+        self.get_normal_btn = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.get_normal_btn.setText, "Get")
+        self.get_normal_btn.setMaximumWidth(50)
+        self.get_normal_btn.clicked.connect(self.getSelectedNormal)
+        self.normal_hbox = QHBoxLayout(self.normal_widget)
+        self.normal_hbox.setContentsMargins(0,0,0,0)
+        self.normal_hbox.addWidget(self.normal_vis)
+        self.normal_hbox.addWidget(self.get_normal_btn)
+
+        self.sym_search_cbox = WidgetWithName.ComboBox(self)
+        TranslatorManager.getTranslator().addTranslate(self.sym_search_cbox.getNameWidget().setText, "Searching Method:")
+        TranslatorManager.getTranslator().addTranslate(self.sym_search_cbox.getNameWidget().setToolTip, "M_SV_SSCB_Tip")
+        self.sym_search_cbox.addItem("Spacial", "spacial")
+        self.sym_search_cbox.addItem("Precise", "precise")
+        TranslatorManager.getTranslator().addItemTranslate(self.sym_search_cbox.getRightWidget())
+
+        self.precise_order_cbox = WidgetWithName.ComboBox(self)
+        TranslatorManager.getTranslator().addTranslate(self.precise_order_cbox.getNameWidget().setText, "Precise Order:")
+        TranslatorManager.getTranslator().addTranslate(self.precise_order_cbox.getNameWidget().setToolTip, "M_SV_POCB_Tip")
+        self.precise_order_cbox.addItem("", "first_half")
+        self.precise_order_cbox.addItem("", "every_other")
+
+        TranslatorManager.getTranslator().addItemTranslate(self.precise_order_cbox.getRightWidget())
+
+        self.re_sym_btn = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.re_sym_btn.setText, "ReSymmetry")
+        self.re_sym_btn.clicked.connect(self.reSymmetryVertices)
+
+        self.header.addWidget(self.pos_widget)
+        self.header.addWidget(self.normal_widget)
+        self.header.addWidget(self.sym_search_cbox)
+        self.header.addWidget(self.precise_order_cbox)
+        self.header.addWidget(self.re_sym_btn)
+        self.vbox = QVBoxLayout(self)
+        self.vbox.setAlignment(Qt.AlignTop)
+        self.vbox.setSpacing(2)
+        self.vbox.addWidget(self.header)
+
+    def getSelectedPosition(self):
+        vector = SymmetryVerticesFunction.getCurrentSelectionPosition().get()
+        print(vector)
+        self.position_vector_vis.setValue(list(vector))
+
+    def getSelectedNormal(self):
+        vector = SymmetryVerticesFunction.getCurrentSelectionNormal().get()
+        print(vector)
+        self.normal_vector_vis.setValue(list(vector))
+
+    def reSymmetryVertices(self):
+        SymmetryVerticesFunction.symmetryVertices(self.sym_search_cbox.getCurrentActiveData(),
+                                                  self.position_vector_vis.getVector(),
+                                                  self.normal_vector_vis.getVector(),
+                                                  self.precise_order_cbox.getCurrentActiveData())
+
+
+
+
 class Modeling(PanelWidget.PanelWidget):
     def __init__(self, parent=None, *args, **kwargs):
-        super(Modeling, self).__init__(parent, *args, **kwargs)
+        super(Modeling, self).__init__(parent, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME, *args, **kwargs)
             
         self.alignment_widget = AlignmentWidget(self)
         self.better_normal_widget = BetterNormal(self)
+        self.sym_v = SymmetryVertices(self)
         
         self.vbox = QVBoxLayout(self)
         self.vbox.setAlignment(Qt.AlignTop)
@@ -165,6 +250,7 @@ class Modeling(PanelWidget.PanelWidget):
         
         self.vbox.addWidget(self.alignment_widget)
         self.vbox.addWidget(self.better_normal_widget)
+        self.vbox.addWidget(self.sym_v)
 
 
 

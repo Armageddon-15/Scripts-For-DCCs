@@ -145,7 +145,7 @@ def pivotAlignmentMainAxis(axis_key="pivot_y", func_method="max", set_trans=True
             raise TypeError("method should be max or min")
         
         
-def pivotAlignmentSecondaryAxis(axis_key="world_x", secondary_axis="pivot_x", main_axis="pivot_y", custom_pos=[0,0,0]):
+def pivotAlignmentSecondaryAxis(axis_key="world_x", secondary_axis="pivot_x", main_axis="pivot_y", custom_pos=None):
     """
     axis_key can be:
         pivot_x, pivot_y, pivot_z,
@@ -153,6 +153,8 @@ def pivotAlignmentSecondaryAxis(axis_key="world_x", secondary_axis="pivot_x", ma
         ignore: do nothing
     """
     # if axis_key in {"world_x", "world_y", "world_z"}:
+    if custom_pos is None:
+        custom_pos = [0, 0, 0]
     axis_key.replace("world", "pivot")
     if axis_key == "ignore":
         return None
@@ -208,32 +210,13 @@ def invertPivotsAxis(first_axis="pivot_y", second_axis="pivot_x"):
         invertPivotAxis(obj, first_axis, second_axis)
            
 
-def getCurrentSelectionPositon(space="world"):
-    def theFunc():
-        try:
-            sel = SelecUtils.orderedSelect()[0]
-        except IndexError:
-            return pmdt.Vector(0, 0, 0) 
+def getCurrentSelectionPosition(space="world"):
+    try:
+        sel = core.ls(sl = True)[0]
+    except IndexError:
+        return pmdt.Vector(0, 0, 0)
         # print(type(sel), sel)
-        if type(sel) is pmnt.Transform:
-            return ObjTrans.getTransformPosition(sel)
-        elif type(sel) is pmnt.Mesh:
-            return ObjTrans.getTransformPosition(ObjTrans.getShapeTransforms(sel)[0], space)
-        elif type(sel) is core.MeshVertex:
-            # print(sel, sel.getPosition(space))
-            return sel.getPosition(space)
-        elif type(sel) is core.MeshEdge:
-            return Utils.average2(pmdt.Vector(sel.getPoint(0, space)), pmdt.Vector(sel.getPoint(1, space)))
-        elif type(sel) is core.MeshFace:
-            points = sel.getPoints(space)
-            new_v = []
-            for point in points:
-                new_v.append(pmdt.Vector(point))
-            return Utils.average(new_v)
-        else:
-            return pmdt.Vector(0, 0, 0)
-        
-    return pmdt.Vector(theFunc())
+    return ObjTrans.getCurrentSelectionPosition(sel, space)
 
         
         

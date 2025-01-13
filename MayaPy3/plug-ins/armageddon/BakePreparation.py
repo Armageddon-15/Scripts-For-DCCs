@@ -16,7 +16,7 @@ WIDGET_OBJECT_NAME = "bake_preparation"
 
 class BakePreparation(PanelWidget.PanelWidget):
     def __init__(self, parent=None, *args, **kwargs):
-        super(BakePreparation,self).__init__(parent, *args, **kwargs)
+        super(BakePreparation,self).__init__(parent, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME, *args, **kwargs)
 
         self.include_children_cbox = GuiUtils.addWidget(self, QCheckBox)
         TranslatorManager.getTranslator().addTranslate(self.include_children_cbox.setText, "Include Children")

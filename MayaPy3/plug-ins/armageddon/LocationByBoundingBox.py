@@ -132,7 +132,7 @@ class BoundingBoxStateWidget(QWidget):
 
 class LocationByBoundingBox(PanelWidget.PanelWidget):
     def __init__(self, parent=None, *args, **kwargs):
-        super(LocationByBoundingBox, self).__init__(*args, **kwargs)
+        super(LocationByBoundingBox, self).__init__(parent, WIDGET_TITLE_NAME, WIDGET_OBJECT_NAME,*args, **kwargs)
         # self.setGeometry(50, 50, 250, 150)
         
         self.vbox = QVBoxLayout(self)

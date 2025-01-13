@@ -118,8 +118,6 @@ def largestBoundingBoxOfBoundingBoxes(bboxes):
     return pmdt.BoundingBox(box_min, box_max)
 
 
-
-
 def getAllTransformsBoundingBox(transforms, actual_size=True, exclude_children=False, space="world"):
     bboxes = []
     
@@ -149,7 +147,6 @@ def getTransformShapesBoundingBox(transform):
         return largestBoundingBoxOfBoundingBoxes(bboxes)
     return pmdt.BoundingBox()
             
-
 
 def visualizeBoundingBox(bbox, name="BoundingBoxVis"):
     with core.UndoChunk("create visual bounding box"):
@@ -200,3 +197,55 @@ def bboxCertainPositionByState(bbox, states, current_pivot_position=pmdt.Point()
         i += 1
         
     return pmdt.Point(new_pivot_pos)
+
+
+def getCurrentSelectionPosition(sel, space="world"):
+    def theFunc():
+        if type(sel) is pmnt.Transform:
+            return getTransformPosition(sel)
+        elif type(sel) is pmnt.Mesh:
+            return getTransformPosition(getShapeTransforms(sel)[0], space)
+        elif type(sel) is core.MeshVertex:
+            # print(sel, sel.getPosition(space))
+            return sel.getPosition(space)
+        elif type(sel) is core.MeshEdge:
+            return Utils.average2(pmdt.Vector(sel.getPoint(0, space)), pmdt.Vector(sel.getPoint(1, space)))
+        elif type(sel) is core.MeshFace:
+            points = sel.getPoints(space)
+            new_v = []
+            for point in points:
+                new_v.append(pmdt.Vector(point))
+            return Utils.average(new_v)
+        else:
+            return pmdt.Vector(0, 0, 0)
+
+    return pmdt.Vector(theFunc())
+
+
+def getCurrentSelectionNormal(sel, space="world"):
+    def theFunc():
+        v_up = pmdt.Vector(0, -1, 0)
+
+        if type(sel) is pmnt.Transform:
+            return v_up.rotateBy(sel.getRotation(space=space))
+        elif type(sel) is pmnt.Mesh:
+            return v_up.rotateBy(getShapeTransforms(sel)[0].getRotation(space=space))
+        elif type(sel) is core.MeshVertex:
+            # print(sel, sel.getPosition(space))
+            return sel.getNormal(space)
+        elif type(sel) is core.MeshEdge:
+            vertices = sel.connectedVertices()
+            new_v = []
+            for vtx in vertices:
+                new_v.append(vtx.getNormal(space))
+            return Utils.average(new_v)
+        elif type(sel) is core.MeshFace:
+            vertices = sel.connectedVertices()
+            new_v = []
+            for vtx in vertices:
+                new_v.append(vtx.getNormal(space))
+            return Utils.average(new_v)
+        else:
+            return pmdt.Vector(1, 0, 0)
+
+    return -pmdt.Vector(theFunc()).normal()
