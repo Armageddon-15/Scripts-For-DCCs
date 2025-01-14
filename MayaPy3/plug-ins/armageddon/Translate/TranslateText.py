@@ -24,6 +24,8 @@ TRANSLATE_TEXT = {
         {"zh": "获取"},
     "Searching Method:":
         {"zh": "寻找方法："},
+    "Reset":
+        {"zh": "复位"},
     # "":
     #     {"zh": ""},
     # ---- Title ----

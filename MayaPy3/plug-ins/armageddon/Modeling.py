@@ -187,6 +187,10 @@ class SymmetryVertices(QWidget):
         self.normal_hbox.addWidget(self.normal_vis)
         self.normal_hbox.addWidget(self.get_normal_btn)
 
+        self.reset_btn = GuiUtils.addButton(self)
+        TranslatorManager.getTranslator().addTranslate(self.reset_btn.setText, "Reset")
+        self.reset_btn.clicked.connect(self.resetVectors)
+
         self.sym_search_cbox = WidgetWithName.ComboBox(self)
         TranslatorManager.getTranslator().addTranslate(self.sym_search_cbox.getNameWidget().setText, "Searching Method:")
         TranslatorManager.getTranslator().addTranslate(self.sym_search_cbox.getNameWidget().setToolTip, "M_SV_SSCB_Tip")
@@ -208,6 +212,7 @@ class SymmetryVertices(QWidget):
 
         self.header.addWidget(self.pos_widget)
         self.header.addWidget(self.normal_widget)
+        self.header.addWidget(self.reset_btn)
         self.header.addWidget(self.sym_search_cbox)
         self.header.addWidget(self.precise_order_cbox)
         self.header.addWidget(self.re_sym_btn)
@@ -225,6 +230,10 @@ class SymmetryVertices(QWidget):
         vector = SymmetryVerticesFunction.getCurrentSelectionNormal().get()
         print(vector)
         self.normal_vector_vis.setValue(list(vector))
+
+    def resetVectors(self):
+        self.position_vector_vis.setValue([0, 0, 0])
+        self.normal_vector_vis.setValue([1, 0, 0])
 
     def reSymmetryVertices(self):
         SymmetryVerticesFunction.symmetryVertices(self.sym_search_cbox.getCurrentActiveData(),
