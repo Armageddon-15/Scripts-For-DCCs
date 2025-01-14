@@ -86,7 +86,7 @@ For maya 2024 using python 3.10
 
 ### 重对称顶点
 
-[视频介绍]()
+[视频介绍](https://www.bilibili.com/video/BV1xacteUEc5/)
 
 与拓扑无关的对称方法，不会改变UV，适合补救用
 
