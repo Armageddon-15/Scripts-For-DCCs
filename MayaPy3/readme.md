@@ -26,7 +26,7 @@ For maya 2024 using python 3.10
 
     + MayaPy3 0.0.2 E:\Python-Scripts-For-DCCs\MayaPy3
 
-其中 `E:\Python-Scripts-For-DCCs` 是你刚才解压的路径
+其中 `E:\Python-Scripts-For-DCCs` 更换为你刚才解压的路径
  
 接着打开maya（如果之前打开过就关闭后重开），先打开插件管理器，开启插件Armageddon.py
 
@@ -56,7 +56,7 @@ For maya 2024 using python 3.10
 
 [视频介绍](https://www.bilibili.com/video/BV1BV411w7hA)
 
-## Transformation And Bounding Box
+## 变换和包围盒
 
 在transform层级的，通过碰撞盒进行一些平移操作
 
@@ -66,15 +66,15 @@ For maya 2024 using python 3.10
 
 也可以批量操作，省时省力
 
-## Modeling
+## 建模
 
 组件层级的一些操作（长远来看后面肯定会分开）
 
-### Alignment
+### 对齐
 
 点对齐线和点对齐面，其中点对齐面可以自定义方向，比较方便
 
-### Better Normal
+### 更好的法线
 
 更可控的法线
 
@@ -84,9 +84,14 @@ For maya 2024 using python 3.10
 
 这也是我第一个用OpenMaya2写的功能（上面都是pymel），om2的例子其实还挺舒服的，配合c++文档理解并不难
 
-另外想吐槽的是转换选择（比如面转点），本来用om2就是因为pymel因为要适配cmd所以会有不必要的字符串操作，om2更原生一些，但这个转换操作的c++例子都是组字符串。属实难蚌
+### 重对称顶点
 
-## Pivot Align Tube
+[视频介绍]()
+
+与拓扑无关的对称方法，不会改变UV，适合补救用
+
+
+## 管状模型坐标对齐
 
 专门用来对齐枢轴的
 
@@ -94,5 +99,14 @@ For maya 2024 using python 3.10
 
 但对任意多边形来说也会有一部分功能会与预期相符，可以慢慢探索
 
-会出视频介绍
+## 烘焙准备
 
+目前只有一个独立材质的功能
+
+## 命名
+
+绑定时会创建很多级的骨骼，整个功能可以在骨骼后面加序号防止重名
+
+## ADV辅助
+
+做动画时会选中很多控制器一起移动，除了让绑定再加个控制器或者选择集，也可以用这个功能快速选择像手指一样的控制器
