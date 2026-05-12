@@ -123,7 +123,7 @@ def main():
         return
     selections.remove(joint)
     controllers = selections
-    print controllers
+    print(controllers)
     cj = makeConstraintJoint(joint)
     for trans in controllers:
         control_joint = findControlJoint(trans)
