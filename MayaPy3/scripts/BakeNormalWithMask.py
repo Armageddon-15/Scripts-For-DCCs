@@ -4,9 +4,9 @@
     1. 在 Maya 视口中先选目标 mesh A (可多个, 支持 transform/shape/face 组件)
        - 同一个 mesh 的多组 face/vtx 选择会自动合并, 整 mesh 只处理一次
     2. 最后一个选中法线来源 mesh B
-    3. 执行: import BakeNormalWithMask; BakeNormalWithMask.bake_normal_with_mask()
+    3. 执行: import BakeNormalWithMask; BakeNormalWithMask.bakeNormalWithMask()
 
-可选参数 (在调用 bake_normal_with_mask 时传):
+可选参数 (在调用 bakeNormalWithMask 时传):
     kernel_radius: float or None
         在 B 上做核函数加权法线采样时的搜索半径(世界空间). None 表示自动取 B 的
         包围盒对角线 * 0.05.
@@ -54,13 +54,13 @@ def maya_useNewAPI():
 # -------------------------------------------------------------
 # 基础工具
 # -------------------------------------------------------------
-def _get_dag(name):
+def _getDag(name):
     sl = om.MSelectionList()
     sl.add(name)
     return sl.getDagPath(0)
 
 
-def _get_mesh_shape(node):
+def _getMeshShape(node):
     """传入 transform / shape / 组件路径前缀, 返回 mesh shape 的 long name"""
     base = node.split(".")[0] if "." in node else node
     if cmds.objectType(base) == "mesh":
@@ -73,7 +73,7 @@ def _get_mesh_shape(node):
     return shapes[0]
 
 
-def _resolve_target(sel_item):
+def _resolveTarget(sel_item):
     """
     解析 A 的一个选择项, 返回 (shape_long_name, face_ids_or_None, vert_ids_or_None).
         - face 组件:   (shape, {face ids}, None)
@@ -83,7 +83,7 @@ def _resolve_target(sel_item):
     None 表示这一维度不约束 (整 shape 时两个都是 None).
     """
     if "." in sel_item and "[" in sel_item:
-        shape = _get_mesh_shape(sel_item)
+        shape = _getMeshShape(sel_item)
         if ".f[" in sel_item:
             comps = cmds.ls(sel_item, flatten=True) or []
             face_ids = {int(c.split("[")[-1].rstrip("]")) for c in comps}
@@ -100,13 +100,13 @@ def _resolve_target(sel_item):
             vert_ids = {int(c.split("[")[-1].rstrip("]")) for c in comps}
             return shape, None, vert_ids
         return shape, None, None
-    return _get_mesh_shape(sel_item), None, None
+    return _getMeshShape(sel_item), None, None
 
 
 # -------------------------------------------------------------
 # 几何 / 法线 / 切线工具
 # -------------------------------------------------------------
-def _get_vertex_normals_world(mesh_fn, mesh_dag):
+def _getVertexNormalsWorld(mesh_fn, mesh_dag):
     """
     返回每个顶点的平均法线 (世界空间, list[MVector]).
     使用 raw normals + MItMeshVertex.getNormalIndices() 而不是 getVertexNormal,
@@ -138,7 +138,7 @@ def _get_vertex_normals_world(mesh_fn, mesh_dag):
     return out
 
 
-def _octahedral_encode(n):
+def _octahedralEncode(n):
     """
     把一个单位 3D 向量映射到 [0, 1]^2 的 2D 点 (octahedral encoding).
     输入 n 可以是 MVector 或 (x, y, z) tuple. 假定已 normalize.
@@ -169,7 +169,7 @@ def _octahedral_encode(n):
     return px * 0.5 + 0.5, py * 0.5 + 0.5
 
 
-def _make_tbn(T_raw, N_raw):
+def _makeTbn(T_raw, N_raw):
     """
     给定一组原始 T / N (任意方向, 不一定单位、不一定正交),
     返回 (T, B, N) 单位正交基, B = N x T.
@@ -201,7 +201,7 @@ def _make_tbn(T_raw, N_raw):
     return T, B, N
 
 
-def _get_vertex_r_mask(mesh_fn):
+def _getVertexRMask(mesh_fn):
     """
     读 A 当前 color set 的 R 通道, 返回 list[float] (长度 = numVertices).
     没有顶点色 / 没读到 -> 全 0.
@@ -237,7 +237,7 @@ def _get_vertex_r_mask(mesh_fn):
 # -------------------------------------------------------------
 # Elendt-style 核加权法线传递
 # -------------------------------------------------------------
-def _elendt_weight(r):
+def _elendtWeight(r):
     """
     r 是归一化距离 d / kernel_radius, [0, 1] 外返回 0.
     Wendland-style 平滑核: (1 - r^2)^3 * (1 + 3 r^2)
@@ -270,7 +270,7 @@ class _Grid3D(object):
             else:
                 bucket.append(idx)
 
-    def query_within_radius(self, p, radius):
+    def queryWithinRadius(self, p, radius):
         """返回 [(idx, sq_distance), ...], 距离 <= radius 的所有样本."""
         cs = self.cell_size
         rs = int(math.ceil(radius / cs))
@@ -298,13 +298,13 @@ class _Grid3D(object):
         return out
 
 
-def _build_source_samples(source_shape):
+def _buildSourceSamples(source_shape):
     """
     把 B 的所有顶点作为采样点, 返回 (positions, normals):
       positions: list[tuple(x,y,z)]   世界空间坐标
       normals:   list[MVector]        世界空间法线 (单位向量)
     """
-    src_dag = _get_dag(source_shape)
+    src_dag = _getDag(source_shape)
     src_fn = om.MFnMesh(src_dag)
     n_verts = src_fn.numVertices
 
@@ -335,7 +335,7 @@ def _build_source_samples(source_shape):
     return positions, normals
 
 
-def _auto_kernel_radius(source_shape):
+def _autoKernelRadius(source_shape):
     """B 包围盒对角 * 0.05, 作为默认 kernel_radius."""
     bb = cmds.exactWorldBoundingBox(source_shape)  # [xmin,ymin,zmin,xmax,ymax,zmax]
     dx = bb[3] - bb[0]
@@ -345,14 +345,14 @@ def _auto_kernel_radius(source_shape):
     return max(diag * 0.05, 1e-4)
 
 
-def _sample_normal_elendt(a_pt, grid, src_positions, src_normals,
+def _sampleNormalElendt(a_pt, grid, src_positions, src_normals,
                           kernel_radius, max_samples, fallback_fn=None):
     """
     在 source 样本上做 Elendt 加权采样, 返回世界空间法线 (MVector, 单位向量).
     若半径内无样本, 用 fallback_fn(MPoint) 兜底 (通常是 getClosestNormal).
     """
     p = (a_pt.x, a_pt.y, a_pt.z)
-    neighbors = grid.query_within_radius(p, kernel_radius)
+    neighbors = grid.queryWithinRadius(p, kernel_radius)
     if not neighbors:
         if fallback_fn is not None:
             try:
@@ -374,7 +374,7 @@ def _sample_normal_elendt(a_pt, grid, src_positions, src_normals,
     total_w = 0.0
     for idx, d2 in neighbors:
         d = math.sqrt(d2)
-        w = _elendt_weight(d * inv_r)
+        w = _elendtWeight(d * inv_r)
         if w <= 0.0:
             continue
         acc += src_normals[idx] * w
@@ -399,7 +399,7 @@ def _sample_normal_elendt(a_pt, grid, src_positions, src_normals,
     return acc
 
 
-def _ensure_uv_set(mesh_fn, uv_set_name):
+def _ensureUvSet(mesh_fn, uv_set_name):
     """如果 mesh 上没这个 UV set 就创建一个, 返回实际 UV set 名字."""
     sets = mesh_fn.getUVSetNames()
     if uv_set_name in sets:
@@ -410,7 +410,7 @@ def _ensure_uv_set(mesh_fn, uv_set_name):
         return mesh_fn.createUVSet(uv_set_name)
 
 
-def _write_face_vertex_uvs(mesh_fn, uv_set_name, fv_uvs, default_uv=(0.5, 0.5)):
+def _writeFaceVertexUvs(mesh_fn, uv_set_name, fv_uvs, default_uv=(0.5, 0.5)):
     """
     用 setUVs + assignUVs 写 face-vertex UV.
     每个 face-vertex 独占一个 UV slot, 共享同一全局 vertexId 的不同 face 也可有不同 UV.
@@ -419,7 +419,7 @@ def _write_face_vertex_uvs(mesh_fn, uv_set_name, fv_uvs, default_uv=(0.5, 0.5)):
         迭代顺序排列. None 表示该 face-vertex 用 default_uv (默认 (0.5, 0.5),
         对应 octahedral encode 的"切线空间 (0,0,1) = 未扰动" 的法线).
     """
-    actual_name = _ensure_uv_set(mesh_fn, uv_set_name)
+    actual_name = _ensureUvSet(mesh_fn, uv_set_name)
 
     n = len(fv_uvs)
     u_array = om.MFloatArray()
@@ -456,7 +456,7 @@ def _write_face_vertex_uvs(mesh_fn, uv_set_name, fv_uvs, default_uv=(0.5, 0.5)):
 # -------------------------------------------------------------
 # 核心流程
 # -------------------------------------------------------------
-def _group_targets_by_shape(target_sels):
+def _groupTargetsByShape(target_sels):
     """
     把 A 端的多个选择项按 shape 合并.
     返回 [(shape_long, face_filter, vert_filter), ...], 同一 shape 只出现一次.
@@ -468,7 +468,7 @@ def _group_targets_by_shape(target_sels):
     grouped = {}    # shape_long -> [face_set_or_None, vert_set_or_None, is_full]
     order = []
     for sel in target_sels:
-        shape, faces, verts = _resolve_target(sel)
+        shape, faces, verts = _resolveTarget(sel)
         is_full = faces is None and verts is None
         if shape not in grouped:
             order.append(shape)
@@ -500,7 +500,7 @@ def _group_targets_by_shape(target_sels):
     return result
 
 
-def _bake_one(target_shape, face_filter, vert_filter, source_shape,
+def _bakeOne(target_shape, face_filter, vert_filter, source_shape,
               source_grid=None, source_positions=None, source_normals=None,
               kernel_radius=None, max_samples=8):
     """
@@ -510,7 +510,7 @@ def _bake_one(target_shape, face_filter, vert_filter, source_shape,
         - vert_filter 不为 None: 这些 vertex 涉及的 face-vertex 都要处理
         - 两者都有: 取并集 (任一命中即处理)
     """
-    target_dag = _get_dag(target_shape)
+    target_dag = _getDag(target_shape)
     target_fn = om.MFnMesh(target_dag)
     target_xform = cmds.listRelatives(target_shape, parent=True, fullPath=True)[0]
     short = target_xform.split("|")[-1]
@@ -533,17 +533,17 @@ def _bake_one(target_shape, face_filter, vert_filter, source_shape,
                     pass
 
     # ---------- 1) 读 A 原本法线 ----------
-    a_normals = _get_vertex_normals_world(target_fn, target_dag)
+    a_normals = _getVertexNormalsWorld(target_fn, target_dag)
 
     # ---------- 2) Elendt 核在 B 上做加权采样, 只对需要混合的顶点查询 ----------
-    src_dag = _get_dag(source_shape)
+    src_dag = _getDag(source_shape)
     src_fn = om.MFnMesh(src_dag)
     c_normals = [None] * n_verts
     iter_verts = range(n_verts) if blend_verts is None else blend_verts
     for vid in iter_verts:
         a_pt = target_fn.getPoint(vid, om.MSpace.kWorld)
         try:
-            n = _sample_normal_elendt(
+            n = _sampleNormalElendt(
                 a_pt, source_grid, source_positions, source_normals,
                 kernel_radius, max_samples,
                 fallback_fn=src_fn.getClosestNormal,
@@ -553,7 +553,7 @@ def _bake_one(target_shape, face_filter, vert_filter, source_shape,
         c_normals[vid] = n
 
     # ---------- 3) 读 A 的 R 通道作为遮罩, 在 world space 用 R 线性混合 ----------
-    r_mask = _get_vertex_r_mask(target_fn)
+    r_mask = _getVertexRMask(target_fn)
     if sum(1 for r in r_mask if r > 1e-4) == 0:
         cmds.warning(u"[BakeNormalWithMask] {0} 的顶点色 R 通道全为 0, 混合后法线和原模型完全一样, "
                      u"请检查目标 mesh 的 current color set".format(short))
@@ -635,23 +635,23 @@ def _bake_one(target_shape, face_filter, vert_filter, source_shape,
             except Exception:
                 N_raw = om.MVector(final_world_normals[vid])
 
-            T, B, N = _make_tbn(T_raw, N_raw)
+            T, B, N = _makeTbn(T_raw, N_raw)
 
             n_w = final_world_normals[vid]
             # 世界 -> 切线: TBN 正交基, 转置即逆, 取 n 在 T/B/N 上的投影
             nt = om.MVector(T * n_w, B * n_w, N * n_w)
             if nt.length() > 1e-8:
                 nt.normalize()
-            fv_uvs.append(_octahedral_encode(nt))
+            fv_uvs.append(_octahedralEncode(nt))
         else:
             fv_uvs.append(None)
         it.next()
 
     # ---------- 5) 写入 A 的 face-vertex UV (新 UV set: ENCODED_NORMAL_UV_SET) -----------
-    _write_face_vertex_uvs(target_fn, ENCODED_NORMAL_UV_SET, fv_uvs)
+    _writeFaceVertexUvs(target_fn, ENCODED_NORMAL_UV_SET, fv_uvs)
 
 
-def bake_normal_with_mask(kernel_radius=None, max_samples=8):
+def bakeNormalWithMask(kernel_radius=None, max_samples=8):
     """主入口: 处理当前选择
 
     Args:
@@ -669,24 +669,24 @@ def bake_normal_with_mask(kernel_radius=None, max_samples=8):
     source = sel[-1]
 
     try:
-        source_shape = _get_mesh_shape(source)
+        source_shape = _getMeshShape(source)
     except Exception as e:
         cmds.error(u"法线来源 B 无法解析为 mesh: {0}".format(e))
         return
 
-    grouped = _group_targets_by_shape(targets)
+    grouped = _groupTargetsByShape(targets)
     if not grouped:
         cmds.warning(u"未解析到任何有效的 A mesh")
         return
 
     if kernel_radius is None or kernel_radius <= 0.0:
-        kernel_radius = _auto_kernel_radius(source_shape)
+        kernel_radius = _autoKernelRadius(source_shape)
         print(u"[BakeNormalWithMask] 自动 kernel_radius = {0:.6f}".format(kernel_radius))
     if max_samples is None or max_samples < 1:
         max_samples = 8
 
     print(u"[BakeNormalWithMask] 构建 source 采样点 / 空间索引 ...")
-    src_positions, src_normals = _build_source_samples(source_shape)
+    src_positions, src_normals = _buildSourceSamples(source_shape)
     grid = _Grid3D(src_positions, cell_size=kernel_radius)
     print(u"[BakeNormalWithMask] 共 {0} 个 source 样本, cell_size={1:.4f}".format(
         len(src_positions), kernel_radius))
@@ -694,7 +694,7 @@ def bake_normal_with_mask(kernel_radius=None, max_samples=8):
     ok, fail = 0, 0
     for shape, face_filter, vert_filter in grouped:
         try:
-            _bake_one(
+            _bakeOne(
                 shape, face_filter, vert_filter, source_shape,
                 source_grid=grid,
                 source_positions=src_positions,
@@ -726,4 +726,4 @@ def bake_normal_with_mask(kernel_radius=None, max_samples=8):
 
 
 if __name__ == "__main__":
-    bake_normal_with_mask(kernel_radius=10, max_samples=2)
+    bakeNormalWithMask(kernel_radius=10, max_samples=2)
