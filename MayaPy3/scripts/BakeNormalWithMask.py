@@ -16,17 +16,17 @@
 
 流程:
     - 按 shape 合并 A 端的选择
-    - 每个 A 复制一份为 C (保留 A->C 顶点 id 映射, 整 shape 时为 identity)
-    - 在 C 上跑 transferAttributes 把 B 的法线传过去 (作为视觉/中间产物)
+    - 读 A 原本的世界法线
     - 用 Elendt-style 平滑径向核在 B 的顶点样本上做加权 (kernel_radius / max_samples)
-      得到 c_normals; 比单点 getClosestNormal 更平滑, 也是 Houdini Attribute Transfer
-      的 Elendt 核做的事
+      得到每个 A 顶点对应的 "从 B 取来" 的世界法线 c_normals
+      (类似 Houdini Attribute Transfer 的 Elendt 核)
     - 读 A 的顶点色 R 通道作为遮罩, 在 world space 用 lerp(A_normal, C_normal, R)
-      合成出每个顶点的世界法线
-    - 逐 face-vertex 单独建 TBN (不在顶点级别累加 tangent, UV 接缝处的切线可以不同),
-      把世界法线转到切线空间, *0.5 + 0.5 打包到 0~1
-    - 用 setFaceVertexColors 写入 A 的 face-vertex 顶点色 (A=1), 不修改 A 的法线
-    - 删除 C
+      合成出每个顶点的世界法线 final_world_normals
+    - 逐 face-vertex 用 MFnMesh.getFaceVertexTangent (MikkT) 拿到 per-face tangent
+      和该 face-vertex 的法线, 建 TBN, 把 final_world_normals 转到切线空间
+    - 用 octahedral encoding 把切线空间法线打包成 (u, v) ∈ [0,1]^2
+    - 用 setUVs + assignUVs 写入 A 的一个新 UV set (ENCODED_NORMAL_UV_SET),
+      identity uvIds 保证每个 face-vertex 独立一个 UV slot; A 的法线 / 顶点色都不动
 
 依赖: maya.cmds + maya.api.OpenMaya (API 2.0)
 """
@@ -35,6 +35,21 @@ import math
 import maya.cmds as cmds
 import maya.api.OpenMaya as om
 
+
+# 全局调试开关:
+#   False - 正常流程: 切线空间转换 -> octahedral encode -> 写入 A 的新 UV set
+#   True  - 调试模式: 跳过切线/UV, 直接把混合后的世界法线 setVertexNormals 写到 A 上,
+#           便于在视口直接看法线混合是否正确
+DEBUG = False
+
+# 输出 UV set 名字; 已存在则复用同名 UV set
+ENCODED_NORMAL_UV_SET = "normalEncoded"
+
+def maya_useNewAPI():
+    """
+    Tell Maya use open maya 2
+    """
+    pass
 
 # -------------------------------------------------------------
 # 基础工具
@@ -60,28 +75,32 @@ def _get_mesh_shape(node):
 
 def _resolve_target(sel_item):
     """
-    解析 A 的一个选择项, 返回 (shape_long_name, vert_id_filter_or_None).
-    vert_id_filter 为 None 表示对全部顶点生效.
+    解析 A 的一个选择项, 返回 (shape_long_name, face_ids_or_None, vert_ids_or_None).
+        - face 组件:   (shape, {face ids}, None)
+        - vtx 组件:    (shape, None, {vert ids})
+        - edge 组件:   (shape, None, {端点 vert ids})
+        - 整 shape:    (shape, None, None)
+    None 表示这一维度不约束 (整 shape 时两个都是 None).
     """
     if "." in sel_item and "[" in sel_item:
         shape = _get_mesh_shape(sel_item)
-        if ".vtx[" in sel_item:
+        if ".f[" in sel_item:
             comps = cmds.ls(sel_item, flatten=True) or []
-        elif ".f[" in sel_item:
-            conv = cmds.polyListComponentConversion(
-                sel_item, fromFace=True, toVertex=True
-            ) or []
-            comps = cmds.ls(conv, flatten=True) or []
+            face_ids = {int(c.split("[")[-1].rstrip("]")) for c in comps}
+            return shape, face_ids, None
+        elif ".vtx[" in sel_item:
+            comps = cmds.ls(sel_item, flatten=True) or []
+            vert_ids = {int(c.split("[")[-1].rstrip("]")) for c in comps}
+            return shape, None, vert_ids
         elif ".e[" in sel_item:
             conv = cmds.polyListComponentConversion(
                 sel_item, fromEdge=True, toVertex=True
             ) or []
             comps = cmds.ls(conv, flatten=True) or []
-        else:
-            return shape, None
-        vert_ids = sorted({int(c.split("[")[-1].rstrip("]")) for c in comps})
-        return shape, vert_ids
-    return _get_mesh_shape(sel_item), None
+            vert_ids = {int(c.split("[")[-1].rstrip("]")) for c in comps}
+            return shape, None, vert_ids
+        return shape, None, None
+    return _get_mesh_shape(sel_item), None, None
 
 
 # -------------------------------------------------------------
@@ -119,6 +138,37 @@ def _get_vertex_normals_world(mesh_fn, mesh_dag):
     return out
 
 
+def _octahedral_encode(n):
+    """
+    把一个单位 3D 向量映射到 [0, 1]^2 的 2D 点 (octahedral encoding).
+    输入 n 可以是 MVector 或 (x, y, z) tuple. 假定已 normalize.
+
+    encode 算法:
+      1) 把 n 投影到八面体表面: p = n / (|x| + |y| + |z|)
+      2) 上半球 (n.z >= 0) 直接用 (px, py)
+      3) 下半球 (n.z <  0) 用 "对角折叠" 公式映射到外圈, 保持连续可解
+      4) 把 [-1, 1] 重映射到 [0, 1]
+    Shader 端需要用配套 decode 还原 (网上有很多版本).
+    """
+    if isinstance(n, om.MVector):
+        nx, ny, nz = n.x, n.y, n.z
+    else:
+        nx, ny, nz = n[0], n[1], n[2]
+    s = abs(nx) + abs(ny) + abs(nz)
+    if s < 1e-8:
+        return 0.5, 0.5
+    inv = 1.0 / s
+    px = nx * inv
+    py = ny * inv
+    if nz < 0.0:
+        sign_x = 1.0 if px >= 0.0 else -1.0
+        sign_y = 1.0 if py >= 0.0 else -1.0
+        npx = (1.0 - abs(py)) * sign_x
+        npy = (1.0 - abs(px)) * sign_y
+        px, py = npx, npy
+    return px * 0.5 + 0.5, py * 0.5 + 0.5
+
+
 def _make_tbn(T_raw, N_raw):
     """
     给定一组原始 T / N (任意方向, 不一定单位、不一定正交),
@@ -140,7 +190,12 @@ def _make_tbn(T_raw, N_raw):
             T = om.MVector(1.0, 0.0, 0.0)
     T.normalize()
     B = N ^ T
-    B *= -1
+    # since we bake normal to unreal
+    # it uses directx tangent space we need to invert bitangent
+    # but uv.x in unreal is also invert compare to maya
+    # so uv.x need to be invert
+    # invert twice == no invert
+    # B *= -1
     if B.length() > 1e-8:
         B.normalize()
     return T, B, N
@@ -344,28 +399,58 @@ def _sample_normal_elendt(a_pt, grid, src_positions, src_normals,
     return acc
 
 
-def _ensure_color_set(mesh_fn, target_xform):
-    """确保 mesh 有可用的当前 color set, 并把 displayColors 打开."""
-    css = mesh_fn.getColorSetNames()
-    if css:
-        cs_name = mesh_fn.currentColorSetName()
-        if cs_name not in css:
-            cs_name = css[0]
-            mesh_fn.setCurrentColorSetName(cs_name)
-    else:
-        cs_name = mesh_fn.createColorSetWithName("colorSet1")
-        mesh_fn.setCurrentColorSetName(cs_name)
+def _ensure_uv_set(mesh_fn, uv_set_name):
+    """如果 mesh 上没这个 UV set 就创建一个, 返回实际 UV set 名字."""
+    sets = mesh_fn.getUVSetNames()
+    if uv_set_name in sets:
+        return uv_set_name
     try:
-        if not cmds.getAttr(target_xform + ".displayColors"):
-            cmds.setAttr(target_xform + ".displayColors", 1)
-    except Exception:
-        pass
+        return mesh_fn.createUVSetWithName(uv_set_name)
+    except AttributeError:
+        return mesh_fn.createUVSet(uv_set_name)
 
 
-def _write_face_vertex_colors(mesh_fn, target_xform, fv_colors, fv_faces, fv_verts):
-    """按 (face_id, vertex_id) 写 face-vertex 顶点色, 不影响其他 face-vertex."""
-    _ensure_color_set(mesh_fn, target_xform)
-    mesh_fn.setFaceVertexColors(fv_colors, fv_faces, fv_verts)
+def _write_face_vertex_uvs(mesh_fn, uv_set_name, fv_uvs, default_uv=(0.5, 0.5)):
+    """
+    用 setUVs + assignUVs 写 face-vertex UV.
+    每个 face-vertex 独占一个 UV slot, 共享同一全局 vertexId 的不同 face 也可有不同 UV.
+
+    fv_uvs: list[(u, v) or None], 长度 = mesh 总 face-vertex 数, 按 MItMeshFaceVertex
+        迭代顺序排列. None 表示该 face-vertex 用 default_uv (默认 (0.5, 0.5),
+        对应 octahedral encode 的"切线空间 (0,0,1) = 未扰动" 的法线).
+    """
+    actual_name = _ensure_uv_set(mesh_fn, uv_set_name)
+
+    n = len(fv_uvs)
+    u_array = om.MFloatArray()
+    v_array = om.MFloatArray()
+    for uv in fv_uvs:
+        if uv is None:
+            u_array.append(default_uv[0])
+            v_array.append(default_uv[1])
+        else:
+            u_array.append(uv[0])
+            v_array.append(uv[1])
+
+    # uvCounts: 每个面有几个 UV (等于面顶点数). uvIds: 每个 face-vertex 指向 UV pool 的索引,
+    # identity 映射 -> 每个 face-vertex 独占一个 slot.
+    n_polys = mesh_fn.numPolygons
+    uv_counts = om.MIntArray()
+    total = 0
+    for fid in range(n_polys):
+        c = mesh_fn.polygonVertexCount(fid)
+        uv_counts.append(c)
+        total += c
+    if total != n:
+        raise RuntimeError(
+            "face-vertex 总数 ({0}) 与 fv_uvs 长度 ({1}) 不一致".format(total, n))
+
+    uv_ids = om.MIntArray()
+    for i in range(n):
+        uv_ids.append(i)
+
+    mesh_fn.setUVs(u_array, v_array, actual_name)
+    mesh_fn.assignUVs(uv_counts, uv_ids, actual_name)
 
 
 # -------------------------------------------------------------
@@ -374,87 +459,88 @@ def _write_face_vertex_colors(mesh_fn, target_xform, fv_colors, fv_faces, fv_ver
 def _group_targets_by_shape(target_sels):
     """
     把 A 端的多个选择项按 shape 合并.
-    返回 [(shape_long, vert_filter_or_None), ...], 同一 shape 只出现一次.
-    - 任一选择项为整 shape (无组件) -> 该 shape 的 filter 为 None (全部顶点)
-    - 否则取所有组件涉及顶点的并集
+    返回 [(shape_long, face_filter, vert_filter), ...], 同一 shape 只出现一次.
+        - face_filter / vert_filter 各自可以是 set 或 None
+        - 若任一选择项是 "整 shape" (face/vert 都是 None), 该 shape 升级为 (None, None)
+          即不再做任何 filter
+        - 其余情况按 face/vert 分别取并集
     """
-    grouped = {}            # shape_long -> set(vert_id) 或 None (表示全选)
-    order = []              # 保留首次出现顺序
+    grouped = {}    # shape_long -> [face_set_or_None, vert_set_or_None, is_full]
+    order = []
     for sel in target_sels:
-        shape, vids = _resolve_target(sel)
+        shape, faces, verts = _resolve_target(sel)
+        is_full = faces is None and verts is None
         if shape not in grouped:
             order.append(shape)
-            grouped[shape] = set() if vids is not None else None
-            if vids is not None:
-                grouped[shape].update(vids)
-        else:
-            # 已经是 None (整 shape) -> 保持 None
-            if grouped[shape] is None:
-                continue
-            # 新增项是整 shape -> 升级为 None
-            if vids is None:
-                grouped[shape] = None
+            grouped[shape] = [None, None, False]
+        entry = grouped[shape]
+        if entry[2]:
+            # 已经是整 shape, 后面的项不再有意义
+            continue
+        if is_full:
+            entry[0] = None
+            entry[1] = None
+            entry[2] = True
+            continue
+        if faces is not None:
+            if entry[0] is None:
+                entry[0] = set(faces)
             else:
-                grouped[shape].update(vids)
+                entry[0].update(faces)
+        if verts is not None:
+            if entry[1] is None:
+                entry[1] = set(verts)
+            else:
+                entry[1].update(verts)
 
     result = []
     for shape in order:
-        s = grouped[shape]
-        result.append((shape, None if s is None else sorted(s)))
+        e = grouped[shape]
+        result.append((shape, e[0], e[1]))
     return result
 
 
-def _bake_one(target_shape, vert_filter, source_shape,
+def _bake_one(target_shape, face_filter, vert_filter, source_shape,
               source_grid=None, source_positions=None, source_normals=None,
               kernel_radius=None, max_samples=8):
+    """
+    face_filter / vert_filter 均为 set 或 None.
+        - 都是 None: 整 shape 处理
+        - face_filter 不为 None: 这些 face 上的 face-vertex 都要处理
+        - vert_filter 不为 None: 这些 vertex 涉及的 face-vertex 都要处理
+        - 两者都有: 取并集 (任一命中即处理)
+    """
     target_dag = _get_dag(target_shape)
     target_fn = om.MFnMesh(target_dag)
     target_xform = cmds.listRelatives(target_shape, parent=True, fullPath=True)[0]
     short = target_xform.split("|")[-1]
 
     n_verts = target_fn.numVertices
+    is_full = (face_filter is None) and (vert_filter is None)
 
-    # ---------- 1) 复制 A 为 C (留给视觉验证 + 之后可能用到的 vid 映射) ----------
-    dup = cmds.duplicate(target_xform, name=short + "_BNWM_C")[0]
-    for ch in cmds.listRelatives(dup, children=True, fullPath=True) or []:
-        if cmds.objectType(ch) != "mesh":
-            try:
-                cmds.delete(ch)
-            except Exception:
-                pass
-    dup_shapes = cmds.listRelatives(
-        dup, shapes=True, fullPath=True, type="mesh", noIntermediate=True
-    ) or []
-    if not dup_shapes:
-        cmds.delete(dup)
-        raise RuntimeError(u"复制 {0} 失败".format(short))
-    dup_shape = dup_shapes[0]
+    # 需要做法线混合的顶点集合: vert_filter 中的顶点 + face_filter 各面的顶点
+    if is_full:
+        blend_verts = None
+    else:
+        blend_verts = set()
+        if vert_filter:
+            blend_verts.update(vert_filter)
+        if face_filter:
+            for fid in face_filter:
+                try:
+                    blend_verts.update(target_fn.getPolygonVertices(fid))
+                except Exception:
+                    pass
 
-    # 记录顶点 id 映射 (A_vid -> C_vid). 全复制是 identity.
-    vid_map_a_to_c = {i: i for i in range(n_verts)}
-
-    # ---------- 2) 读 A 原本法线 ----------
+    # ---------- 1) 读 A 原本法线 ----------
     a_normals = _get_vertex_normals_world(target_fn, target_dag)
 
-    # ---------- 3) (可选) transferAttributes 把 B 的法线传给 C, 仅供视觉验证 ---------
-    try:
-        cmds.transferAttributes(
-            source_shape, dup_shape,
-            transferPositions=0,
-            transferNormals=1,
-            transferUVs=0,
-            transferColors=0,
-            sampleSpace=0,
-            searchMethod=3,
-        )
-    except Exception as e:
-        cmds.warning(u"[BakeNormalWithMask] transferAttributes 失败(仅视觉影响): {0}".format(e))
-
-    # ---------- 4) 用 Elendt 核在 B 的顶点样本上做加权法线采样 ----------
+    # ---------- 2) Elendt 核在 B 上做加权采样, 只对需要混合的顶点查询 ----------
     src_dag = _get_dag(source_shape)
     src_fn = om.MFnMesh(src_dag)
     c_normals = [None] * n_verts
-    for vid in range(n_verts):
+    iter_verts = range(n_verts) if blend_verts is None else blend_verts
+    for vid in iter_verts:
         a_pt = target_fn.getPoint(vid, om.MSpace.kWorld)
         try:
             n = _sample_normal_elendt(
@@ -466,21 +552,19 @@ def _bake_one(target_shape, vert_filter, source_shape,
             n = om.MVector(a_normals[vid])
         c_normals[vid] = n
 
-    # ---------- 5) 读 A 的 R 通道作为遮罩, 在 world space 用 R 线性混合 ----------
+    # ---------- 3) 读 A 的 R 通道作为遮罩, 在 world space 用 R 线性混合 ----------
     r_mask = _get_vertex_r_mask(target_fn)
     if sum(1 for r in r_mask if r > 1e-4) == 0:
         cmds.warning(u"[BakeNormalWithMask] {0} 的顶点色 R 通道全为 0, 混合后法线和原模型完全一样, "
                      u"请检查目标 mesh 的 current color set".format(short))
 
     final_world_normals = [None] * n_verts
-    flt = None if vert_filter is None else set(vert_filter)
     for vid in range(n_verts):
         a_n = a_normals[vid]
-        if flt is not None and vid not in flt:
+        if blend_verts is not None and vid not in blend_verts:
             final_world_normals[vid] = a_n
             continue
-        c_vid = vid_map_a_to_c.get(vid, vid)
-        c_n = c_normals[c_vid] if 0 <= c_vid < len(c_normals) else a_n
+        c_n = c_normals[vid] if c_normals[vid] is not None else a_n
         r = r_mask[vid]
         if r <= 0.0:
             n = om.MVector(a_n)
@@ -492,12 +576,35 @@ def _bake_one(target_shape, vert_filter, source_shape,
             n.normalize()
         final_world_normals[vid] = n
 
-    # ---------- 6) 逐 face-vertex 计算自己的 TBN, 把世界法线转到切线空间, 打包到 0~1 ----------
-    #   不再按顶点平均 tangent, UV 接缝处不同 face-vertex 的切线可以不同.
-    fv_faces = om.MIntArray()
-    fv_verts = om.MIntArray()
-    fv_colors = om.MColorArray()
+    if DEBUG:
+        # ---------- [DEBUG] 跳过切线转换/顶点色, 直接 setVertexNormals 到 A 上 ----------
+        if blend_verts is None:
+            write_verts = list(range(n_verts))
+        else:
+            write_verts = sorted(blend_verts)
+        try:
+            cmds.polyNormalPerVertex(
+                ["{0}.vtx[{1}]".format(target_shape, v) for v in write_verts],
+                unFreezeNormal=True,
+            )
+        except Exception:
+            pass
 
+        normals_array = om.MFloatVectorArray()
+        vid_array = om.MIntArray()
+        for vid in write_verts:
+            nv = final_world_normals[vid]
+            normals_array.append(om.MFloatVector(nv.x, nv.y, nv.z))
+            vid_array.append(vid)
+        target_fn.setVertexNormals(normals_array, vid_array, om.MSpace.kWorld)
+        target_fn.updateSurface()
+        return
+
+    # ---------- 4) 逐 face-vertex 计算 TBN -> 切线空间法线 -> octahedral 编码成 (u, v) -----
+    #   - 用 MFnMesh.getFaceVertexTangent (MikkT, 与 shader 端一致), 不用迭代器的 getTangent
+    #   - 命中条件: 整 shape, 或 fid 在 face_filter, 或 vid 在 vert_filter
+    #   - 按 MItMeshFaceVertex 迭代顺序填入 fv_uvs, 后面 setUVs + assignUVs (identity uvIds),
+    #     共享同一 vertexId 的不同 face 各有独立 UV slot
     has_uv = False
     try:
         has_uv = target_fn.numUVs() > 0
@@ -506,13 +613,21 @@ def _bake_one(target_shape, vert_filter, source_shape,
     if not has_uv:
         cmds.warning(u"[BakeNormalWithMask] {0} 没有 UV, 切线空间无定义, 结果可能不可用".format(short))
 
+    fv_uvs = []
+
     it = om.MItMeshFaceVertex(target_dag)
     while not it.isDone():
         vid = it.vertexId()
-        if flt is None or vid in flt:
-            fid = it.faceId()
+        fid = it.faceId()
+        hit = is_full
+        if not hit and face_filter is not None and fid in face_filter:
+            hit = True
+        if not hit and vert_filter is not None and vid in vert_filter:
+            hit = True
+
+        if hit:
             try:
-                T_raw = om.MVector(it.getTangent(om.MSpace.kWorld))
+                T_raw = target_fn.getFaceVertexTangent(fid, vid, om.MSpace.kWorld)
             except Exception:
                 T_raw = om.MVector(1.0, 0.0, 0.0)
             try:
@@ -527,23 +642,13 @@ def _bake_one(target_shape, vert_filter, source_shape,
             nt = om.MVector(T * n_w, B * n_w, N * n_w)
             if nt.length() > 1e-8:
                 nt.normalize()
-            r = nt.x * 0.5 + 0.5
-            g = nt.y * 0.5 + 0.5
-            b = nt.z * 0.5 + 0.5
-
-            fv_faces.append(fid)
-            fv_verts.append(vid)
-            fv_colors.append(om.MColor((r, g, b, 1.0)))
+            fv_uvs.append(_octahedral_encode(nt))
+        else:
+            fv_uvs.append(None)
         it.next()
 
-    # ---------- 7) 写入 A 的 face-vertex 顶点色 (不修改 A 的法线) ----------
-    _write_face_vertex_colors(target_fn, target_xform, fv_colors, fv_faces, fv_verts)
-
-    # ---------- 8) 删除 C ----------
-    try:
-        cmds.delete(dup)
-    except Exception:
-        pass
+    # ---------- 5) 写入 A 的 face-vertex UV (新 UV set: ENCODED_NORMAL_UV_SET) -----------
+    _write_face_vertex_uvs(target_fn, ENCODED_NORMAL_UV_SET, fv_uvs)
 
 
 def bake_normal_with_mask(kernel_radius=None, max_samples=8):
@@ -587,10 +692,10 @@ def bake_normal_with_mask(kernel_radius=None, max_samples=8):
         len(src_positions), kernel_radius))
 
     ok, fail = 0, 0
-    for shape, vert_filter in grouped:
+    for shape, face_filter, vert_filter in grouped:
         try:
             _bake_one(
-                shape, vert_filter, source_shape,
+                shape, face_filter, vert_filter, source_shape,
                 source_grid=grid,
                 source_positions=src_positions,
                 source_normals=src_normals,
@@ -598,7 +703,15 @@ def bake_normal_with_mask(kernel_radius=None, max_samples=8):
                 max_samples=max_samples,
             )
             ok += 1
-            n_info = u"全部" if vert_filter is None else u"{0} 个顶点".format(len(vert_filter))
+            if face_filter is None and vert_filter is None:
+                n_info = u"全部"
+            else:
+                parts = []
+                if face_filter is not None:
+                    parts.append(u"{0} 面".format(len(face_filter)))
+                if vert_filter is not None:
+                    parts.append(u"{0} 顶点".format(len(vert_filter)))
+                n_info = u" + ".join(parts)
             print(u"[BakeNormalWithMask] 完成: {0}  ({1})".format(shape, n_info))
         except Exception as e:
             fail += 1
@@ -613,4 +726,4 @@ def bake_normal_with_mask(kernel_radius=None, max_samples=8):
 
 
 if __name__ == "__main__":
-    bake_normal_with_mask(kernel_radius=2.0, max_samples=2)
+    bake_normal_with_mask(kernel_radius=10, max_samples=2)
