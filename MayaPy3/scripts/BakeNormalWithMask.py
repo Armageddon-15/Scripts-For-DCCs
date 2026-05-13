@@ -1,7 +1,7 @@
 """BakeNormalWithMask.py
 
 用法:
-    1. 在 Maya 视口中先选目标 mesh A (可多个, 支持 transform/shape/face 组件)
+    1. 在 Maya 视口中先选目标 mesh A (支持 transform/shape/face 组件)
        - 同一个 mesh 的多组 face/vtx 选择会自动合并, 整 mesh 只处理一次
     2. 最后一个选中法线来源 mesh B
     3. 执行: import BakeNormalWithMask; BakeNormalWithMask.bakeNormalWithMask()
