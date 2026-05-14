@@ -166,6 +166,9 @@ def _octahedralEncode(n):
         npx = (1.0 - abs(py)) * sign_x
         npy = (1.0 - abs(px)) * sign_y
         px, py = npx, npy
+
+    # ue 里uv.y的方向和maya是反的
+    # 所以如果不remap到0-1，maya的uv.y是[-1,1]，ue里就是[0,2]，很恶心
     return px * 0.5 + 0.5, py * 0.5 + 0.5
 
 
@@ -190,11 +193,8 @@ def _makeTbn(T_raw, N_raw):
             T = om.MVector(1.0, 0.0, 0.0)
     T.normalize()
     B = N ^ T
-    # since we bake normal to unreal
-    # it uses directx tangent space we need to invert bitangent
-    # but uv.x in unreal is also invert compare to maya
-    # so uv.x need to be invert
-    # invert twice == no invert
+    # ue是dx切线，maya默认是opengl，所以这里本来bitangent要反转一下
+    # 但uv.y在ue也是反转的，所以两次反转等于不反转
     # B *= -1
     if B.length() > 1e-8:
         B.normalize()
